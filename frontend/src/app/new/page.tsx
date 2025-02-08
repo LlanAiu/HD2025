@@ -6,6 +6,7 @@ import { FormEvent } from "react";
 
 export default function Page() {
     const [id, setId] = useState("");
+    const [name, setName] = useState("");
     const [players, setPlayers] = useState(8);
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -28,6 +29,19 @@ export default function Page() {
                         placeholder="Must be unique"
                         value={id}
                         onChange={(e) => setId(e.target.value)}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="name">Name:</label>
+                    <input
+                        type="text"
+                        name="name"
+                        id="name"
+                        placeholder="Your name..."
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                     />
                 </div>

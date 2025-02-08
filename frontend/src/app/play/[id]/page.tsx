@@ -1,9 +1,7 @@
 import Game from "../game";
 
-export default function Page({ params }: { params: { id: string } }) {
-    const { id: game_id } = params;
-
-    console.log(game_id);
+export default async function Page({ params }: { params: { id: string } }) {
+    const game_id = (await params).id;
 
     return (
         <>
