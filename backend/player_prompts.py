@@ -9,7 +9,7 @@ class Roles(Enum):
     DETECTIVE = "detective"
 
 
-TEMPERATURE_SETTING = 0.7
+TEMPERATURE_SETTING = 1
 GENERAL_TOKEN_LIMIT = 200
 
 
@@ -36,51 +36,57 @@ class GPTManager:
         self.playerRoles = player_role_dict
         for player, role in self.playerRoles.items():
             if role == Roles.MAFIA:
-                self.mafia.add(player)
+                self.mafia.append(player)
+                self.mafiaAlive.append(player)
+            else:
+                self.townsfolkAlive.append(player)
 
     def generate_system_prompt_for_player(self, playerName):
         # TODO Add Examples and say The following is the game as it has happened so far...
         if (self.playerRoles[playerName] == Roles.VILLAGER):
-            prompt = (  
+            prompt = [  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is citizen. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
                 f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
-            )
-            return prompt
+            ]
+            return "\n".join(prompt)
         if (self.playerRoles[playerName] == Roles.MAFIA):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is mafia. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen. The mafia  are: {", ".join(player for player in self.mafia)}",
                 f"Your goal is to kill all the townsfolk before the players vote you out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}.\n",
                 f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise.\n\n",
-                f"Here are a few examples of how you can respond to my queries: \n \n",
+                f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
-            return prompt
+            return "\n".join(prompt)
         if (self.playerRoles[playerName] == Roles.DETECTIVE):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. When you investigate a player, you will learn if they are the mafia. If you find mafia, you should try to accuse them and convince others to vote them out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
                 f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
-                                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
+                f"Here are a few examples of how to respond:",
+                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
-            return prompt
+            return "\n".join(prompt)
         if (self.playerRoles[playerName] == Roles.DOCTOR):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. Every night you will be able to heal a player, including yourself, and hopefully prevent them from being killed by the mafia. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
                 f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
-            return prompt
+            return "\n".join(prompt)
         
 
     def update_memory(self, name, text, players_alive):
@@ -90,11 +96,11 @@ class GPTManager:
                 List[string]: A list of the names of all the players alive
         """
         memoryEntry = {
-            "role" : name,
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : text
+                    "text" : name + ": " + text
                 }
             ]
         }
@@ -103,6 +109,8 @@ class GPTManager:
         self.doctorKnowledge.append(memoryEntry)
         self.mafiaKnowledge.append(memoryEntry)
         self.playersAlive = players_alive
+        self.mafiaAlive = []
+        self.townsfolkAlive = []
         for player in players_alive:
             if self.playerRoles[player] == Roles.MAFIA:
                 self.mafiaAlive.append(player)
@@ -116,11 +124,11 @@ class GPTManager:
         Return, string: name of player they would like to kill.
         """
         self.mafiaKnowledge.append({
-            "role" : "Narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"It is now night and no players can hear you. Who would you like to kill? The townsfolk alive are {", ".join(player for player in self.townsfolkAlive)}. Please respond with only one of these players and nothing else."
+                    "text" : f"Narrator: It is now night and no players can hear you. Who would you like to kill? The townsfolk alive are {", ".join(player for player in self.townsfolkAlive)}. Please respond with only one of these players and nothing else."
                 }
             ]
         })
@@ -132,7 +140,7 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.mafiaKnowledge
         )
-        response = message.content['text'].lower()
+        response = message.content[0].text.lower()
 
         playerToKill = ""
         for player in self.townsfolkAlive:
@@ -143,11 +151,11 @@ class GPTManager:
             playerToKill = random.choice(self.townsfolkAlive)
 
         self.mafiaKnowledge.append({
-            "role" : player_being_asked,
+            "role" : "assistant",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"(To narrator) I would like to kill {playerToKill}."
+                    "text" : f"{player_being_asked}: (To narrator) I would like to kill {playerToKill}."
                 }
             ]
         })
@@ -161,11 +169,11 @@ class GPTManager:
         Return, string: name of player they would like to save.
         """
         self.doctorKnowledge.append({
-            "role" : "Narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"It is now night and no players can hear you. Who would you like to save and prevent the mafia from killing? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
+                    "text" : f"Narrator: It is now night and no players can hear you. Who would you like to save and prevent the mafia from killing? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
                 }
             ]
         })
@@ -177,7 +185,8 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.doctorKnowledge
         )
-        response = message.content['text'].lower()
+        print(message.content)
+        response = message.content[0].text.lower()
 
         playerToSave = ""
         for player in self.playersAlive:
@@ -188,11 +197,11 @@ class GPTManager:
             playerToSave = random.choice(self.playersAlive)
 
         self.doctorKnowledge.append({
-            "role" : player_being_asked,
+            "role" : "assistant",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"(To narrator) I would like to save {playerToSave}."
+                    "text" : f"({player_being_asked}: (To narrator) I would like to save {playerToSave}."
                 }
             ]
         })
@@ -207,11 +216,11 @@ class GPTManager:
         """
 
         self.detectiveKnowledge.append({
-            "role" : "Narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"It is now night and no players can hear you. Who would you like to investigate and learn if they are the mafia? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
+                    "text" : f"Narrator: It is now night and no players can hear you. Who would you like to investigate and learn if they are the mafia? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
                 }
             ]
         })
@@ -223,7 +232,7 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.detectiveKnowledge
         )
-        response = message.content['text'].lower()
+        response = message.content[0].text.lower()
 
         playerToInvestigate = ""
         for player in self.playersAlive:
@@ -234,32 +243,32 @@ class GPTManager:
             playerToInvestigate = random.choice(self.playersAlive)
 
         self.detectiveKnowledge.append({
-            "role" : player_being_asked,
+            "role" : "assistant",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"(To narrator) I would like to investigate {playerToInvestigate}."
+                    "text" : f"{player_being_asked}: (To narrator) I would like to investigate {playerToInvestigate}."
                 }
             ]
         })
 
         if (playerToInvestigate in self.mafiaAlive):
             self.detectiveKnowledge.append({
-            "role" : "narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"{playerToInvestigate} is one of the mafia. Next time you speak you may want reveal you are the investigator to accuse him, at the risk of being killed by the mafia."
+                    "text" : f"Narrator: {playerToInvestigate} is one of the mafia. Next time you speak you may want reveal you are the investigator to accuse him, at the risk of being killed by the mafia."
                 }
             ]
             })
         else:
             self.detectiveKnowledge.append({
-                "role" : "narrator",
+                "role" : "user",
                 "content" : [
                     {
                         "type" : "text",
-                        "text" : f"{playerToInvestigate} is a townsfolk."
+                        "text" : f"Narrator: {playerToInvestigate} is a townsfolk."
                     }
                 ]
             })
@@ -267,7 +276,7 @@ class GPTManager:
         return playerToInvestigate
 
 
-    def contibute_to_general_discussion(self, player_being_asked):
+    def contribute_to_general_discussion(self, player_being_asked):
         """
         Argument, string: name of player being asked.
         Return, string: The text they would like to contribute to the discussion
@@ -283,11 +292,11 @@ class GPTManager:
             context = list(self.mafiaKnowledge)
 
         context.append({
-            "role" : "narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : "Please contribute 1-2 sentences to the discussion."
+                    "text" : "Narrator: Please contribute 1-2 sentences to the discussion."
                 }
             ]
         })
@@ -298,7 +307,7 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.detectiveKnowledge
         )
-        return message.content['text']
+        return message.content[0].text
 
 
     def who_would_you_like_to_accuse(self, player_being_asked, role):
@@ -319,11 +328,11 @@ class GPTManager:
             context = list(self.mafiaKnowledge)
 
         context.append({
-            "role" : "narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"Please say who you would like to accuse and why in 2-3 sentences. Your options are {", ".join(player for player in self.playersAlive)}."
+                    "text" : f"Narrator: Please say who you would like to accuse and why in 2-3 sentences. Your options are {", ".join(player for player in self.playersAlive)}."
                 }
             ]
         })
@@ -335,7 +344,7 @@ class GPTManager:
             messages=self.detectiveKnowledge
         )
 
-        response = message.content['text']
+        response = message.content[0].text
         lowerCaseResponse = response.lower()
 
         playerToAccuse = None
@@ -362,11 +371,11 @@ class GPTManager:
             context = list(self.mafiaKnowledge)
 
         context.append({
-            "role" : "narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"You have been accused. Please defend yourself with a 2-3 sentence response."
+                    "text" : f"Narrator: You have been accused. Please defend yourself with a 2-3 sentence response."
                 }
             ]
         })
@@ -378,7 +387,7 @@ class GPTManager:
             messages=self.detectiveKnowledge
         )
 
-        return message.content['text']
+        return message.content[0].text
 
 
     def vote(self, player_being_asked, role, player_being_accused):
@@ -399,11 +408,11 @@ class GPTManager:
             context = list(self.mafiaKnowledge)
 
         context.append({
-            "role" : "narrator",
+            "role" : "user",
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"Would you like to vote for {player_being_accused}?\n System: Answer with yes or no."
+                    "text" : f"Narrator: Would you like to vote for {player_being_accused}?\n System: Answer with yes or no."
                 }
             ]
         })
@@ -415,7 +424,7 @@ class GPTManager:
             messages=self.detectiveKnowledge
         )
 
-        response = message.content['text'].lower()
+        response = message.content[0].text.lower()
 
         if ("yes" in response):
             return True
