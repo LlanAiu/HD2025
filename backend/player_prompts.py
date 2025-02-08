@@ -44,29 +44,41 @@ class GPTManager:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is citizen. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. "
+                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
+                f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
+                f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return prompt
         if (self.playerRoles[playerName] == Roles.MAFIA):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is mafia. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen. The mafia  are: {", ".join(player for player in self.mafia)}",
-                f"Your goal is to find the mafia and vote them out before you die. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}.\n",
+                f"Your goal is to kill all the townsfolk before the players vote you out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}.\n",
                 f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise.\n\n",
-                f"Here are a few examples of how you can respond to my queries: \n",
+                f"Here are a few examples of how you can respond to my queries: \n \n",
+                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
+                f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
+                f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return prompt
         if (self.playerRoles[playerName] == Roles.DETECTIVE):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. When you investigate a player, you will learn if they are the mafia. If you find mafia, you should try to accuse them and convince others to vote them out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. "
+                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
+                f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
+                f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return prompt
         if (self.playerRoles[playerName] == Roles.DOCTOR):
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. Every night you will be able to heal a player, including yourself, and hopefully prevent them from being killed by the mafia. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. "
+                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
+                f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
+                f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return prompt
         
@@ -275,7 +287,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : "Please contribute 1-2 sentences to the discussion for everyone to hear."
+                    "text" : "Please contribute 1-2 sentences to the discussion."
                 }
             ]
         })
@@ -311,7 +323,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"Please say who you would like to accuse and why. Your options are {", ".join(player for player in self.playersAlive)}."
+                    "text" : f"Please say who you would like to accuse and why in 2-3 sentences. Your options are {", ".join(player for player in self.playersAlive)}."
                 }
             ]
         })
