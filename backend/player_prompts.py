@@ -9,7 +9,7 @@ class Roles(Enum):
     DETECTIVE = "detective"
 
 
-TEMPERATURE_SETTING = 0.5
+TEMPERATURE_SETTING = 0.7
 
 
 class GPTManager:
@@ -119,7 +119,7 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.mafiaKnowledge
         )
-        response = message.content
+        response = message.content['text']
 
         playerToKill = ""
         for player in self.townsfolkAlive:
@@ -134,7 +134,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"(To narrator) I would like to kill {player}."
+                    "text" : f"(To narrator) I would like to kill {playerToKill}."
                 }
             ]
         })
@@ -152,7 +152,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"It is now night and no players can hear you. Who would you like to save? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
+                    "text" : f"It is now night and no players can hear you. Who would you like to save and prevent the mafia from killing? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
                 }
             ]
         })
@@ -164,7 +164,7 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.doctorKnowledge
         )
-        response = message.content
+        response = message.content['text']
 
         playerToSave = ""
         for player in self.playersAlive:
@@ -179,7 +179,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"(To narrator) I would like to save {player}."
+                    "text" : f"(To narrator) I would like to save {playerToSave}."
                 }
             ]
         })
@@ -193,8 +193,65 @@ class GPTManager:
         Return, string: name of player they would like to investigate.
         """
 
-        # make sure to update the memory of the investigator
-        return "Albert"
+        self.detectiveKnowledge.append({
+            "role" : "Narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"It is now night and no players can hear you. Who would you like to investigate and learn if they are the mafia? The alive players are {", ".join(player for player in self.playersAlive)}. Please respond with only one of these players and nothing else."
+                }
+            ]
+        })
+
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            temperature=TEMPERATURE_SETTING,
+            system=self.generate_system_prompt_for_player(player_being_asked),
+            messages=self.detectiveKnowledge
+        )
+        response = message.content['text']
+
+        playerToInvestigate = ""
+        for player in self.playersAlive:
+            if (player in response):
+                playerToInvestigate = player
+            
+        if playerToInvestigate == "":
+            playerToInvestigate = random.choice(self.playersAlive)
+
+        self.detectiveKnowledge.append({
+            "role" : player_being_asked,
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"(To narrator) I would like to investigate {playerToInvestigate}."
+                }
+            ]
+        })
+
+        if (playerToInvestigate in self.mafiaAlive):
+            self.detectiveKnowledge.append({
+            "role" : "narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"{playerToInvestigate} is one of the mafia. Next time you speak you may want reveal you are the investigator to accuse him, at the risk of being killed by the mafia."
+                }
+            ]
+            })
+        else:
+            self.detectiveKnowledge.append({
+                "role" : "narrator",
+                "content" : [
+                    {
+                        "type" : "text",
+                        "text" : f"{playerToInvestigate} is a townsfolk."
+                    }
+                ]
+            })
+        
+        return playerToInvestigate
 
 
     def contibute_to_general_discussion(self, player_being_asked):
@@ -202,18 +259,77 @@ class GPTManager:
         Argument, string: name of player being asked.
         Return, string: The text they would like to contribute to the discussion
         """
-        return "I think Alex was being pretty sus."
+        context = []
+        if self.playerRoles[player_being_asked] == Roles.VILLAGER:
+            context = list(self.villagerKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DETECTIVE:
+            context = list(self.detectiveKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DOCTOR:
+            context = list(self.doctorKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.MAFIA:
+            context = list(self.mafiaKnowledge)
+
+        context.append({
+            "role" : "narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : "Please contribute 1-2 sentences to the discussion for everyone to hear."
+                }
+            ]
+        })
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            temperature=TEMPERATURE_SETTING,
+            system=self.generate_system_prompt_for_player(player_being_asked),
+            messages=self.detectiveKnowledge
+        )
+        return message.content['text']
 
 
-    def accuse(self, player_being_asked, role):
+    def who_would_you_like_to_accuse(self, player_being_asked, role):
         """
         Argument  string: name of player being asked.
                 Role enum: role - the role of the player being asked
-        Return, string: name of player they would like to investigate.
+        Return, string: name of player they would like to accuse.
                 string: text explaining why they want to accuse them
         """
-        return ("Albert", "I want to accuse him because he is sus")
+        context = []
+        if self.playerRoles[player_being_asked] == Roles.VILLAGER:
+            context = list(self.villagerKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DETECTIVE:
+            context = list(self.detectiveKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DOCTOR:
+            context = list(self.doctorKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.MAFIA:
+            context = list(self.mafiaKnowledge)
 
+        context.append({
+            "role" : "narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"Please say who you would like to accuse and why. Your options are {", ".join(player for player in self.playersAlive)}."
+                }
+            ]
+        })
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
+            temperature=TEMPERATURE_SETTING,
+            system=self.generate_system_prompt_for_player(player_being_asked),
+            messages=self.detectiveKnowledge
+        )
+
+        response = message.content['text']
+
+        playerToAccuse = None
+        for player in self.playersAlive:
+            if (player in response):
+                playerToAccuse = player
+
+        return (playerToAccuse, response)
 
     def defence_from_accusation(self, player_being_asked, role):
         """
