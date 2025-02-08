@@ -1,12 +1,13 @@
-
 import Game from "../game";
 
-export default async function Page({ params } : { params: Promise<{game_id: String}> }) {
-    const game_id = (await params).game_id;
+export default function Page({ params }: { params: { id: string } }) {
+    const { id: game_id } = params;
+
+    console.log(game_id);
 
     return (
         <>
-            <Game game_id={game_id}/>
+            <Game game_id={game_id} />
         </>
     );
 }

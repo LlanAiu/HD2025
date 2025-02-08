@@ -6,8 +6,8 @@ import Night from "../game_states/night";
 import Discussion from "../game_states/discussion";
 import Accusation from "../game_states/accusation";
 
-export default function Game({ game_id }: { game_id: String }) {
-    
+export default function Game({ game_id }: { game_id: string }) {
+    const id = game_id;
     const [state, setState] = useState<String>("ready");
     const [round, setRound] = useState<number>(1);
 
@@ -21,7 +21,7 @@ export default function Game({ game_id }: { game_id: String }) {
             {state == "accusation" && <Accusation />}
 
             <div>
-                Game with ID: {game_id}
+                <p>Game with ID: {id}</p>
             </div>
 
             <button onClick={() => setState(test_state[Math.floor(Math.random() * test_state.length)])}>

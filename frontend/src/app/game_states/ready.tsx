@@ -2,6 +2,9 @@
 
 export default function Ready() {
     return (
-        <div>Ready?</div>
+        <div>
+            <p>Role information</p>
+            <p>Ready?</p>
+        </div>
     );
 }
