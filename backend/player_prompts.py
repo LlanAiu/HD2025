@@ -10,6 +10,7 @@ class Roles(Enum):
 
 
 TEMPERATURE_SETTING = 0.7
+GENERAL_TOKEN_LIMIT = 200
 
 
 class GPTManager:
@@ -114,12 +115,12 @@ class GPTManager:
 
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.mafiaKnowledge
         )
-        response = message.content['text']
+        response = message.content['text'].lower()
 
         playerToKill = ""
         for player in self.townsfolkAlive:
@@ -159,12 +160,12 @@ class GPTManager:
 
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.doctorKnowledge
         )
-        response = message.content['text']
+        response = message.content['text'].lower()
 
         playerToSave = ""
         for player in self.playersAlive:
@@ -205,12 +206,12 @@ class GPTManager:
 
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.detectiveKnowledge
         )
-        response = message.content['text']
+        response = message.content['text'].lower()
 
         playerToInvestigate = ""
         for player in self.playersAlive:
@@ -280,7 +281,7 @@ class GPTManager:
         })
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.detectiveKnowledge
@@ -316,17 +317,18 @@ class GPTManager:
         })
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.detectiveKnowledge
         )
 
         response = message.content['text']
+        lowerCaseResponse = response.lower()
 
         playerToAccuse = None
         for player in self.playersAlive:
-            if (player in response):
+            if (player in lowerCaseResponse):
                 playerToAccuse = player
 
         return (playerToAccuse, response)
@@ -337,7 +339,34 @@ class GPTManager:
                 Role enum: role - the role of the player being asked
         Return, string: The text they would like to contribute to the discussion
         """
-        return "I shouldn't be voted because of X"
+        context = []
+        if self.playerRoles[player_being_asked] == Roles.VILLAGER:
+            context = list(self.villagerKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DETECTIVE:
+            context = list(self.detectiveKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DOCTOR:
+            context = list(self.doctorKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.MAFIA:
+            context = list(self.mafiaKnowledge)
+
+        context.append({
+            "role" : "narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"You have been accused. Please defend yourself with a 2-3 sentence response."
+                }
+            ]
+        })
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=GENERAL_TOKEN_LIMIT,
+            temperature=TEMPERATURE_SETTING,
+            system=self.generate_system_prompt_for_player(player_being_asked),
+            messages=self.detectiveKnowledge
+        )
+
+        return message.content['text']
 
 
     def vote(self, player_being_asked, role, player_being_accused):
@@ -347,4 +376,37 @@ class GPTManager:
                 string: name of player being accused / voted for
         Return: True if they would like to vote to kill or False if not
         """
-        return True
+        context = []
+        if self.playerRoles[player_being_asked] == Roles.VILLAGER:
+            context = list(self.villagerKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DETECTIVE:
+            context = list(self.detectiveKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.DOCTOR:
+            context = list(self.doctorKnowledge)
+        elif self.playerRoles[player_being_asked] == Roles.MAFIA:
+            context = list(self.mafiaKnowledge)
+
+        context.append({
+            "role" : "narrator",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : f"Would you like to vote for {player_being_accused}?\n System: Answer with yes or no."
+                }
+            ]
+        })
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=5,
+            temperature=TEMPERATURE_SETTING,
+            system=self.generate_system_prompt_for_player(player_being_asked),
+            messages=self.detectiveKnowledge
+        )
+
+        response = message.content['text'].lower()
+
+        if ("yes" in response):
+            return True
+        elif ("no" in response):
+            return False
+        return random.choice([True], [False])
