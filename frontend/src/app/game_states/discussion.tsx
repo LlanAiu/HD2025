@@ -1,21 +1,21 @@
 import { useState, useEffect, KeyboardEvent } from 'react';
-import { Message, PlayerData } from '../data/types';
+import { Message, PlayerData, State } from '../data/types';
 
 interface DiscussionProps {
     player: PlayerData;
     toDisplay: Message[];
     sendMessage: (message: string) => void;
-    continueTurn: () => void;
+    continueTurn: (next: State) => void;
     pollDiscussion: () => void;
 }
 
-export default function Discussion({player, toDisplay, sendMessage, continueTurn} : DiscussionProps) {
+export default function Discussion({player, toDisplay, sendMessage, continueTurn, pollDiscussion} : DiscussionProps) {
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<string[]>([]);
+    const [messages, setMessages] = useState<Message[]>(toDisplay);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            
+            pollDiscussion();
         }, 2000);
 
         return () => clearInterval(interval);
@@ -23,7 +23,7 @@ export default function Discussion({player, toDisplay, sendMessage, continueTurn
 
     const handleSend = () => {
         if (message.trim()) {
-            setMessages([...messages, message]);
+            setMessages([...messages, {player_name: player.name, message: message}]);
             setMessage('');
             sendMessage(message);
         }
@@ -42,7 +42,7 @@ export default function Discussion({player, toDisplay, sendMessage, continueTurn
             </div>
             <div className="mb-4 space-y-2">
                 {messages.map((msg, index) => (
-                    <div key={index} className="p-2 bg-white border border-gray-200 rounded">{msg}</div>
+                    <div key={index} className="p-2 bg-white border border-gray-200 rounded">{msg.message}</div>
                 ))}
             </div>
 
@@ -66,7 +66,7 @@ export default function Discussion({player, toDisplay, sendMessage, continueTurn
 
             {!player.alive && 
                 <div>
-                    <button onClick={continueTurn}> Continue </button>
+                    <button onClick={() => continueTurn(State.ACCUSATION)}> Continue </button>
                 </div>
             }
         </div>

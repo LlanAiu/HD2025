@@ -8,13 +8,12 @@ import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
 import { GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
-import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, sleepNight } from "../data/socket_client";
+import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, pollState, sleepNight } from "../data/socket_client";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
     const id = game_id;
     const test_states: GameState[] = testStates;
     const [state, setState] = useState<GameState>(init_state);
-    const [round, setRound] = useState<number>(1);
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [index, setIndex] = useState(0);
 
@@ -71,9 +70,9 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
-    const continueGame = () => {
+    const continueGame = (next: State) => {
         if (socket) {
-            continueTurn(socket, id);
+            continueTurn(socket, id, next);
         }
     }
 
@@ -95,7 +94,11 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
-
+    const pollDiscussion = () => {
+        if (socket) {
+            pollState(socket, id);
+        }
+    }
 
     return (
         <>
@@ -120,6 +123,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                     toDisplay={state.discussion}
                     sendMessage={sendMessage}
                     continueTurn={continueGame}
+                    pollDiscussion={pollDiscussion}
                 />
             }
             {state.state === State.ACCUSATION && 
@@ -131,12 +135,15 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                     onAccuse={accuse}
                     sendDefenceMessage={sendDefenseMessage}
                     continueTurn={continueGame}
+                    pollDiscussion={pollDiscussion}
                 />
             }
             {state.state === State.VOTING && 
                 <Voting 
+                    player={human}
                     accused={state.accused} 
-                    onVote={vote} 
+                    onVote={vote}
+                    continueTurn={continueGame} 
                 />
             }
 

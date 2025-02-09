@@ -1,4 +1,4 @@
-import { Actions, SocketData } from "./types";
+import { Actions, SocketData, State } from "./types";
 
 export function fetchGameState(socket: WebSocket, id: string) {
     console.log(`fetchGameState called with id: ${id}`);
@@ -81,11 +81,24 @@ export function sleepNight(socket: WebSocket, id: string) {
     socket.send(JSON.stringify(data));
 }
 
-export function continueTurn(socket: WebSocket, id: string) {
+export function continueTurn(socket: WebSocket, id: string, next: State) {
     console.log("Skipping Human Turn");
+    
     const data: SocketData = {
         game_id: id,
-        action_type: Actions.CONTINUE
+        action_type: Actions.CONTINUE,
+        next_state: next.valueOf()
+    }
+
+    socket.send(JSON.stringify(data));
+}
+
+export function pollState(socket: WebSocket, id: string) {
+    console.log("Polling game state");
+
+    const data: SocketData = {
+        game_id: id, 
+        action_type: Actions.POLL
     }
 
     socket.send(JSON.stringify(data));
