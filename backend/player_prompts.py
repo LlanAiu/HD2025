@@ -2,6 +2,7 @@ from enum import Enum
 import anthropic
 import random
 
+
 class Roles(Enum):
     VILLAGER = "villager"
     MAFIA = "mafia"
@@ -69,7 +70,7 @@ class GPTManager:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. When you investigate a player, you will learn if they are the mafia. If you find mafia, you should try to accuse them and convince others to vote them out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Respond conversationally in short sentences, like a human player would. Be careful about revealing you are the detective, or the mafia might kill you. Sometimes, though it is the best move to reveal yourself and accuse the mafia. Write only 1-3 sentences per response, unless specified otherwise. ",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -78,9 +79,9 @@ class GPTManager:
             return "\n".join(prompt)
         if (self.playerRoles[playerName] == Roles.DOCTOR):
             prompt = (  
-                f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
+                f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is doctor. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. Every night you will be able to heal a player, including yourself, and hopefully prevent them from being killed by the mafia. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Respond conversationally in short sentences, like a human player would. Try not to let the mafia know you are the doctor, or they might kill you. Write only 1-3 sentences per response, unless specified otherwise. ",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -144,10 +145,11 @@ class GPTManager:
 
         playerToKill = ""
         for player in self.townsfolkAlive:
-            if (player in response):
+            if (player.lower() in response):
                 playerToKill = player
             
         if playerToKill == "":
+            print('RANDOM PLAYER KILLED')
             playerToKill = random.choice(self.townsfolkAlive)
 
         self.mafiaKnowledge.append({
@@ -185,15 +187,14 @@ class GPTManager:
             system=self.generate_system_prompt_for_player(player_being_asked),
             messages=self.doctorKnowledge
         )
-        print(message.content)
         response = message.content[0].text.lower()
-
         playerToSave = ""
         for player in self.playersAlive:
-            if (player in response):
+            if (player.lower() in response):
                 playerToSave = player
             
         if playerToSave == "":
+            print("PLAYER TO SAVE RANDOMLY PICKED")
             playerToSave = random.choice(self.playersAlive)
 
         self.doctorKnowledge.append({
@@ -236,10 +237,11 @@ class GPTManager:
 
         playerToInvestigate = ""
         for player in self.playersAlive:
-            if (player in response):
+            if (player.lower() in response):
                 playerToInvestigate = player
             
         if playerToInvestigate == "":
+            print("PLAYER TO INVESTIGATE RANDOMLY PICKED")
             playerToInvestigate = random.choice(self.playersAlive)
 
         self.detectiveKnowledge.append({
@@ -310,7 +312,7 @@ class GPTManager:
         return message.content[0].text
 
 
-    def who_would_you_like_to_accuse(self, player_being_asked, role):
+    def who_would_you_like_to_accuse(self, player_being_asked):
         """
         Argument  string: name of player being asked.
                 Role enum: role - the role of the player being asked
@@ -354,7 +356,7 @@ class GPTManager:
 
         return (playerToAccuse, response)
 
-    def defence_from_accusation(self, player_being_asked, role):
+    def defence_from_accusation(self, player_being_asked):
         """
         Argument  string: name of player being asked.
                 Role enum: role - the role of the player being asked
@@ -390,7 +392,7 @@ class GPTManager:
         return message.content[0].text
 
 
-    def vote(self, player_being_asked, role, player_being_accused):
+    def vote(self, player_being_asked, player_being_accused):
         """
         Argument  string: name of player being asked.
                 Role enum: role - the role of the player being asked
@@ -430,4 +432,5 @@ class GPTManager:
             return True
         elif ("no" in response):
             return False
+        print('VOTE RANDOMIZED')
         return random.choice([True], [False])
