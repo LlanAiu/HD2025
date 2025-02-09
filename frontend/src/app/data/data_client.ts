@@ -31,6 +31,7 @@ JSON_HEADER.append("Content-Type", "application/json");
 
 export async function create_new_game(setup_data: SetupData) {
     checkValidEnvironment();
+    console.log(setup_data);
     const response = await fetch(`${BACKEND_URL}/game/new`, {
         method: "POST",
         headers: JSON_HEADER,
@@ -54,52 +55,52 @@ export async function create_new_game(setup_data: SetupData) {
 
 export async function get_initial_state(id: string): Promise<FetchResult<GameState>> {
     checkValidEnvironment();
-    // const response = await fetch(`${BACKEND_URL}/game/${id}`);
+    const response = await fetch(`${BACKEND_URL}/game/${id}`);
 
-    const sampleData: GameState = {
-        human: "Alice",
-        players: [
-            { name: "Alice", alive: true, role: Role.VILLAGER },
-            { name: "Bob", alive: true, role: Role.MAFIA }
-        ],
-        state: State.NIGHT,
-        night_summary: ["Day 1 started", "Alice voted for Bob"],
-        discussion: [
-            { player_name: "Alice", message: "I think Bob is suspicious." },
-            { player_name: "Bob", message: "I'm not the mafia!" }
-        ],
-        accused: "Bob",
-        accusationNumber: 1,
-        accuser: "Alice",
-        votes: [
-            {
-                player_name: "Alice",
-                vote: true
-            },
-            {
-                player_name: "Bob",
-                vote: false
-            }
-        ],
-        game_over: EndResult.IN_PROGRESS
-    };
+    // const sampleData: GameState = {
+    //     human: "Alice",
+    //     players: [
+    //         { name: "Alice", alive: true, role: Role.VILLAGER },
+    //         { name: "Bob", alive: true, role: Role.MAFIA }
+    //     ],
+    //     state: State.NIGHT,
+    //     night_summary: ["Day 1 started", "Alice voted for Bob"],
+    //     discussion: [
+    //         { player_name: "Alice", message: "I think Bob is suspicious." },
+    //         { player_name: "Bob", message: "I'm not the mafia!" }
+    //     ],
+    //     accused: "Bob",
+    //     accusationNumber: 1,
+    //     accuser: "Alice",
+    //     votes: [
+    //         {
+    //             player_name: "Alice",
+    //             vote: true
+    //         },
+    //         {
+    //             player_name: "Bob",
+    //             vote: false
+    //         }
+    //     ],
+    //     game_over: EndResult.IN_PROGRESS
+    // };
     
-    return {
-        status: Status.Ok,
-        data: sampleData
-    };
+    // return {
+    //     status: Status.Ok,
+    //     data: sampleData
+    // };
 
-    // if (response.ok) {
-    //     const data = await response.json();
+    if (response.ok) {
+        const data = await response.json();
 
-    //     return {
-    //         status: Status.Ok,
-    //         data: data
-    //     };
-    // } else {
-    //     return {
-    //         status: Status.Error,
-    //         message: "Failed To create game"
-    //     }
-    // }
+        return {
+            status: Status.Ok,
+            data: data
+        };
+    } else {
+        return {
+            status: Status.Error,
+            message: "Failed To create game"
+        }
+    }
 }
