@@ -33,7 +33,7 @@ export default function Accusation({ humanPlayer, players, humanAccused, humanAc
     };
 
     return (
-        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
+        <div className="mt-5 p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-lg mx-auto">
             <h2 className="text-2xl font-bold mb-4">Accusation</h2>
             <p className="text-gray-700 mb-4">{narratorMessage}</p>
             {(humanPlayer.alive && humanAccusing) &&
@@ -78,7 +78,7 @@ export default function Accusation({ humanPlayer, players, humanAccused, humanAc
                 }
             </div>
 
-            {((humanPlayer.alive && !humanAccused && !humanAccusing) || !humanPlayer.alive) &&
+            {(!humanPlayer.alive) &&
                 <button 
                     onClick={() => continueTurn(State.VOTING)} 
                     className="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
@@ -87,7 +87,7 @@ export default function Accusation({ humanPlayer, players, humanAccused, humanAc
                 </button>
             }
 
-            {(humanPlayer.alive && humanAccusing && messages.length > 0) &&
+            {((humanPlayer.alive && humanAccusing && messages.length > 0) || (humanPlayer.alive && !humanAccused && !humanAccusing)) && 
                 <button 
                     onClick={nextTurn} 
                     className="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"

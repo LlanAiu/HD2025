@@ -27,7 +27,7 @@ export default function Voting({ player, accused, narratorMessage, onVote, conti
     }
 
     return (
-        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
+        <div className="mt-5 p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-lg mx-auto">
             <h2 className="text-2xl font-bold mb-4">Voting</h2>
             <p className="text-lg mb-6">Accused: {accused}</p>
             {player.alive && 

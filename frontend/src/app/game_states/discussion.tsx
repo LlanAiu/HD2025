@@ -43,7 +43,7 @@ export default function Discussion({player, toDisplay, night_summary, sendMessag
     };
 
     return (
-        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
+        <div className="p-6 mt-5 border border-gray-300 rounded-lg bg-gray-50 max-w-lg mx-auto">
             <div className="mb-4">
                 <p className="text-lg font-semibold">{night_summary}</p>
             </div>

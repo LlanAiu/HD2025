@@ -21,7 +21,7 @@ export default function Ready({ player, onStart } : ReadyProps) {
     const roleDescription = roleDescriptions[player.role.valueOf()] || "No description available for this role.";
 
     return (
-        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto text-center">
+        <div className="mt-5 p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-lg mx-auto text-center">
             <p className="text-lg mb-4">You are the <span className="font-bold">{player.role}</span> role</p>
             <p className="mb-6">{roleDescription}</p>
             <button 
