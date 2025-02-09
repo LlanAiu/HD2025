@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { PlayerData } from '../data/types';
 
 interface VotingProps {
-    accused: PlayerData;
-    onVote: (vote: 'convict' | 'pardon') => void;
+    accused: string;
+    onVote: (vote: 'Y' | 'N') => void;
 }
 
 export default function Voting({ accused, onVote }: VotingProps) {
-    const [vote, setVote] = useState<'convict' | 'pardon' | null>(null);
+    const [vote, setVote] = useState<'Y' | 'N' | null>(null);
 
-    const handleVote = (vote: 'convict' | 'pardon') => {
+    const handleVote = (vote: 'Y' | 'N') => {
         setVote(vote);
         onVote(vote);
     };
@@ -17,22 +16,24 @@ export default function Voting({ accused, onVote }: VotingProps) {
     return (
         <div>
             <h2>Voting</h2>
-            <p>Accused: {accused.name}</p>
-            <div>
-                <button 
-                    onClick={() => handleVote('convict')}
-                    style={{ fontWeight: vote === 'convict' ? 'bold' : 'normal' }}
+            <p>Accused: {accused}</p>
+            <div className='space-y-2'>
+                <button
+                    className='block'
+                    onClick={() => handleVote('Y')}
+                    style={{ fontWeight: vote === 'Y' ? 'bold' : 'normal' }}
                 >
                     Convict
                 </button>
                 <button 
-                    onClick={() => handleVote('pardon')}
-                    style={{ fontWeight: vote === 'pardon' ? 'bold' : 'normal' }}
+                    className='block'
+                    onClick={() => handleVote('N')}
+                    style={{ fontWeight: vote === 'N' ? 'bold' : 'normal' }}
                 >
                     Pardon
                 </button>
             </div>
-            {vote && <p>You have voted to {vote} {accused.name}.</p>}
+            {vote && <p>You have voted to {vote} {accused}.</p>}
         </div>
     );
 }

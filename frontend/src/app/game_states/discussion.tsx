@@ -20,6 +20,9 @@ export default function Discussion() {
     return (
         <div>
             <div>
+                <p>Chat</p>
+            </div>
+            <div>
                 {messages.map((msg, index) => (
                     <div key={index}>{msg}</div>
                 ))}

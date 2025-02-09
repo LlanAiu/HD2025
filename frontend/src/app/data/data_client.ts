@@ -1,4 +1,6 @@
-import { GameState, Role, SetupData } from "./types";
+'use server'
+
+import { FetchResult, GameState, Role, SetupData, State, Status } from "./types";
 
 const BACKEND_URL_DEV: string | undefined = process.env.BACKEND_DEV;
 const BACKEND_URL_DEPLOY: string | undefined = process.env.BACKEND_DEPLOY;
@@ -37,19 +39,54 @@ export async function create_new_game(setup_data: SetupData) {
 
     if (response.ok) {
         const data = await response.json();
-    } else {
 
+        return {
+            status: Status.Ok,
+            data: data
+        };
+    } else {
+        return {
+            status: Status.Error,
+            message: "Failed To create game"
+        }
     }
 }
 
-export async function fetchGameState(id: string) {
+export async function get_initial_state(id: string): Promise<FetchResult<GameState>> {
     checkValidEnvironment();
-    const response = await fetch(`/api/game/${id}/state`);
+    // const response = await fetch(`${BACKEND_URL}/game/${id}`);
 
-    if (response.ok) {
-        const data = await response.json();
-        return data;
-    } else {
-        console.error("Error fetching game state");
-    }
+    const sampleData: GameState = {
+        human: "Alice",
+        players: [
+            { name: "Alice", alive: true, role: Role.TOWNSPERSON },
+            { name: "Bob", alive: true, role: Role.MAFIA }
+        ],
+        state: State.NIGHT,
+        events: ["Day 1 started", "Alice voted for Bob"],
+        discussion: [
+            { player_name: "Alice", message: "I think Bob is suspicious." },
+            { player_name: "Bob", message: "I'm not the mafia!" }
+        ],
+        accusation: "Bob"
+    };
+    
+    return {
+        status: Status.Ok,
+        data: sampleData
+    };
+
+    // if (response.ok) {
+    //     const data = await response.json();
+
+    //     return {
+    //         status: Status.Ok,
+    //         data: data
+    //     };
+    // } else {
+    //     return {
+    //         status: Status.Error,
+    //         message: "Failed To create game"
+    //     }
+    // }
 }

@@ -33,7 +33,7 @@ export default function Accusation() {
                 title="Select a player to accuse:"
             />
             {selectedPlayer && <p>You have accused: {selectedPlayer.name}</p>}
-            <div>
+            <div className='mt-5'>
                 <h3>Chat</h3>
                 <div>
                     {messages.map((msg, index) => (

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { useState } from "react";
 import { FormEvent } from "react";
+import { create_new_game } from "../data/data_client";
 
 export default function Page() {
     const [id, setId] = useState("");
@@ -11,8 +12,11 @@ export default function Page() {
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        // fetch request
-
+        create_new_game({
+            game_id: id,
+            player_name: name,
+            num_players: players
+        });
         
         redirect(`/play/${id}`)
     }
