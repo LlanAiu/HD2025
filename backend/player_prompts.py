@@ -307,7 +307,7 @@ class GPTManager:
             max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
-            messages=self.detectiveKnowledge
+            messages=context
         )
         return message.content[0].text
 
@@ -343,7 +343,7 @@ class GPTManager:
             max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
-            messages=self.detectiveKnowledge
+            messages=context
         )
 
         response = message.content[0].text
@@ -386,7 +386,7 @@ class GPTManager:
             max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
-            messages=self.detectiveKnowledge
+            messages=context
         )
 
         return message.content[0].text
@@ -414,23 +414,23 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"Narrator: Would you like to vote for {player_being_accused}?\n System: Answer with yes or no."
+                    "text" : f"Narrator: {player_being_accused} has been accused. Vote for {player_being_accused} being a mafia or not.\n System: Answer with yes or no. You have to vote immediately."
                 }
             ]
         })
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=5,
+            max_tokens=GENERAL_TOKEN_LIMIT,
             temperature=TEMPERATURE_SETTING,
             system=self.generate_system_prompt_for_player(player_being_asked),
-            messages=self.detectiveKnowledge
+            messages=context
         )
 
         response = message.content[0].text.lower()
-
+        print(response)
         if ("yes" in response):
             return True
         elif ("no" in response):
             return False
         print('VOTE RANDOMIZED')
-        return random.choice([True], [False])
+        return random.choice([True, False])
