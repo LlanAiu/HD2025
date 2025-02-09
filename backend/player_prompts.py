@@ -91,7 +91,10 @@ class GPTManager:
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return "\n".join(prompt)
-        
+        print(f"PLAYER SYSTEM PROMPT NOT FOUND FOR PLAYER {playerName}")
+        print(self.playerRoles)
+        print(self.playerRoles[playerName])
+        return ""
 
     def update_memory(self, name, text, players_alive):
         """
@@ -193,6 +196,9 @@ class GPTManager:
                 }
             ]
         })
+
+        print(self.generate_system_prompt_for_player(player_being_asked))
+        print(self.mafiaKnowledge)
 
         message = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",

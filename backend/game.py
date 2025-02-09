@@ -34,6 +34,7 @@ class Game:
     current_night_summary = ""
     current_discussion = []
     current_votes = []
+    person_killed = ""
 
 
     def __init__(self, human_name:str, num_players:int, api_key):
@@ -176,7 +177,7 @@ class Game:
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
             return False #if return false, run accusations again, 3 total times max. if still not passed, no one dies
     
-    def night_voting(self, user_choice:str=""):
+    def night_voting(self, user_choice : str = ""):
         """
         Arguments: string; name of player the human would like to kill 
         if the user is part of the mafia (this condition is handled externally).
@@ -198,6 +199,7 @@ class Game:
                     person_killed = self.GPTManager.who_to_kill(player) 
                     #person_killed = "Naomi" #testing
                     break
+        self.person_killed = person_killed
         return person_killed
 
     def night_investigating(self): #WORKS without GPTManager
@@ -219,7 +221,7 @@ class Game:
             self.GPTManager.who_to_investigate(detective)
         #TODO: maybe make narrator say "the detective is investigating someone"
 
-    def night_healing(self, person_killed, user_choice:str=""):
+    def night_healing(self, user_choice:str=""):
         """
         Arguments: string, string; name of player killed by mafia, name of player to be saved by human 
         if they are the doctor (this condition is handled externally).
@@ -227,6 +229,7 @@ class Game:
         The doctor is passed to GPTManager.
         Returns: void.
         """
+        person_killed = self.person_killed
         # print(f"Saved {person_saved}")
         print(f"Killed {person_killed}")
         if self.player_dict[self.human].role == Roles.DOCTOR:
