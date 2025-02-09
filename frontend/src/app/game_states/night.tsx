@@ -14,7 +14,13 @@ export default function Night({player, players, handleSelect, sleep }: NightProp
         <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4">Night Time</h2>
             <NightRoleSelector player={player} players={players} onSelect={handleSelect} />
-            {(player.role === Role.VILLAGER || !player.alive) && <button onClick={sleep}> Continue </button>}
+            {(player.role === Role.VILLAGER || !player.alive) && 
+                <button 
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" 
+                    onClick={sleep}
+                > 
+                    Continue 
+                </button>}
         </div>
     );
 }

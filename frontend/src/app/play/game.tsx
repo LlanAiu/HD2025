@@ -8,7 +8,7 @@ import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
 import { EndResult, GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
-import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, pollState, sleepNight } from "../data/socket_client";
+import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, nextTurn, pollState, sleepNight } from "../data/socket_client";
 import { redirect } from "next/navigation";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
@@ -16,32 +16,55 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     const test_states: GameState[] = testStates;
     const [state, setState] = useState<GameState>(init_state);
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [discussionSocket, setDiscussionSocket] = useState<WebSocket | null>(null);
+    
     const [index, setIndex] = useState(0);
+    const [human, setHuman] = useState<PlayerData>(() => {
+        const players: PlayerData[] = init_state.players || [];
 
-    const humanName = state.human;
-    const human: PlayerData = state.players.find(player => player.name === humanName) || {
-        name: "Test",
-        alive: true,
-        role: Role.VILLAGER
-    };
+        const humanPlayer: PlayerData = players.find(p => p.name === init_state.human) || {
+            name: "Test",
+            alive: true,
+            role: Role.VILLAGER
+        };
+        return humanPlayer;
+    });
 
     useEffect(() => {
         const ws = new WebSocket(`ws://localhost:8000/ws/game/${game_id}`);
+        const discussionWs = new WebSocket(`ws://localhost:8000/ws/player/${game_id}`);
 
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if(data.game_over === EndResult.MAFIA_WIN) {
+            const data: GameState = JSON.parse(event.data) as GameState;
+            console.log(data);
+            if (data.game_over === EndResult.MAFIA_WIN) {
                 redirect(`./${game_id}/win/mafia`);
             } else if (data.game_over === EndResult.VILLAGER_WIN) {
                 redirect(`./${game_id}/win/villagers`);
             }
-            setState(s => data);
+
+            const players: PlayerData[] = data["players"] || [];
+            
+            const humanPlayer: PlayerData = players.find(p => p.name === data.human) || {
+                name: "Test",
+                alive: true,
+                role: Role.VILLAGER
+            };
+
+            setHuman(humanPlayer);
+            setState(data);
+        };
+
+        discussionWs.onmessage = (event) => {
+
         };
 
         setSocket(ws);
+        setDiscussionSocket(discussionWs);
 
         return () => {
             ws.close();
+            discussionWs.close();
         };
     }, [game_id]);
 
@@ -83,8 +106,8 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     }
 
     const sendMessage = (message: string) => {
-        if (socket) {
-            discuss(socket, id, message);
+        if (discussionSocket) {
+            discuss(discussionSocket, id, message);
         }
     }
 
@@ -106,24 +129,30 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
+    const next = () => {
+        if (socket) {
+            nextTurn(socket, id);
+        }
+    }
+
     return (
         <>
-            {state.state === State.READY && 
-                <Ready 
-                    player={human} 
+            {state.state === State.READY &&
+                <Ready
+                    player={human}
                     onStart={start}
                 />
             }
-            {state.state === State.NIGHT && 
-                <Night 
-                    player={human} 
-                    players={state.players} 
-                    handleSelect={nightAction} 
+            {state.state === State.NIGHT &&
+                <Night
+                    player={human}
+                    players={state.players}
+                    handleSelect={nightAction}
                     sleep={sleep}
                 />
             }
-            {state.state === State.DISCUSSION && 
-                <Discussion 
+            {state.state === State.DISCUSSION &&
+                <Discussion
                     player={human}
                     night_summary={state.night_summary}
                     toDisplay={state.discussion}
@@ -132,35 +161,31 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                     pollDiscussion={pollDiscussion}
                 />
             }
-            {state.state === State.ACCUSATION && 
-                <Accusation 
+            {state.state === State.ACCUSATION &&
+                <Accusation
                     humanPlayer={human}
                     players={state.players}
-                    humanAccused={state.accused === humanName}
-                    humanAccusing={state.accuser === humanName}
+                    humanAccused={state.accused === human.name}
+                    humanAccusing={state.accuser === human.name}
+                    narratorMessage={state.night_summary}
                     onAccuse={accuse}
+                    accusedMessage={state.discussion}
                     sendDefenceMessage={sendDefenseMessage}
                     continueTurn={continueGame}
                     pollDiscussion={pollDiscussion}
+                    nextTurn={next}
                 />
             }
-            {state.state === State.VOTING && 
-                <Voting 
+            {state.state === State.VOTING &&
+                <Voting
                     player={human}
-                    accused={state.accused} 
+                    accused={state.accused}
                     onVote={vote}
-                    continueTurn={continueGame} 
+                    continueTurn={continueGame}
+                    nextTurn={next}
+                    narratorMessage={state.night_summary}
                 />
             }
-
-            <div className="mt-5">
-                <button className='block' onClick={() => {
-                    setIndex(s => (s + 1) % test_states.length)
-                    setState(test_states[index])
-                }}>
-                    Change State
-                </button>
-            </div>
         </>
     );
 }

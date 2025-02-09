@@ -12,15 +12,21 @@ interface DiscussionProps {
 
 export default function Discussion({player, toDisplay, night_summary, sendMessage, continueTurn, pollDiscussion} : DiscussionProps) {
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState<Message[]>(toDisplay);
+    const [messages, setMessages] = useState<Message[]>(() => toDisplay);
 
     useEffect(() => {
+        
+
         const interval = setInterval(() => {
             pollDiscussion();
         }, 2000);
 
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        setMessages(toDisplay);
+    }, [toDisplay]);
 
     const handleSend = () => {
         if (message.trim()) {
@@ -46,7 +52,9 @@ export default function Discussion({player, toDisplay, night_summary, sendMessag
             </div>
             <div className="mb-4 space-y-2">
                 {messages.map((msg, index) => (
-                    <div key={index} className="p-2 bg-white border border-gray-200 rounded">{msg.message}</div>
+                    <div key={index} className="p-2 bg-white border border-gray-200 rounded">
+                        <span className="font-bold">{msg.player_name}: </span>{msg.message}
+                    </div>
                 ))}
             </div>
 
@@ -70,7 +78,12 @@ export default function Discussion({player, toDisplay, night_summary, sendMessag
 
             {!player.alive && 
                 <div>
-                    <button onClick={() => continueTurn(State.ACCUSATION)}> Continue </button>
+                    <button 
+                        onClick={() => continueTurn(State.ACCUSATION)} 
+                        className="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+                    >
+                        Continue
+                    </button>
                 </div>
             }
         </div>

@@ -72,11 +72,21 @@ export default function PlayerSelector({
                         )
                 )}
             </ul>
-            <button onClick={handleSubmit}>Confirm</button>
+            <button
+                onClick={handleSubmit}
+                className="mt-4 py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+                Confirm
+            </button>
             {message !== "" && 
                 <div>
                     <p>{message}</p>
-                    <button onClick={detectiveSubmit}>Continue</button>
+                    <button
+                        onClick={detectiveSubmit}
+                        className="mt-4 py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Continue
+                    </button>
                 </div>
             }
         </div>

@@ -4,11 +4,13 @@ import { PlayerData, State } from '../data/types';
 interface VotingProps {
     player: PlayerData;
     accused: string;
+    narratorMessage: string;
     onVote: (vote: 'Y' | 'N') => void;
     continueTurn: (next: State) => void;
+    nextTurn: () => void;
 }
 
-export default function Voting({ player, accused, onVote, continueTurn }: VotingProps) {
+export default function Voting({ player, accused, narratorMessage, onVote, continueTurn, nextTurn }: VotingProps) {
     const [vote, setVote] = useState<'Y' | 'N' | null>(null);
     const [voteMessage, setVoteMessage] = useState<'guilty' | 'not guilty' | null>(null);
 
@@ -47,8 +49,32 @@ export default function Voting({ player, accused, onVote, continueTurn }: Voting
 
             {vote && <p className="mt-4 text-lg font-semibold">You have voted that {accused} is {voteMessage}.</p>}
 
-            {player.alive && <button onClick={handleSubmit}>Confirm</button>}
-            {!player.alive && <button onClick={() => continueTurn(State.NIGHT)}>Continue</button>}
+            {player.alive && 
+                <button 
+                    className="mt-4 w-full py-2 px-4 bg-indigo-600 text-white font-bold rounded hover:bg-indigo-700"
+                    onClick={handleSubmit}
+                >
+                    Confirm
+                </button>
+            }
+            {!player.alive && 
+                <button 
+                    className="mt-4 w-full py-2 px-4 bg-gray-600 text-white font-bold rounded hover:bg-gray-700"
+                    onClick={() => continueTurn(State.NIGHT)}
+                >
+                    Continue
+                </button>
+            }
+            <p className="mt-4 text-lg">{narratorMessage}</p>
+
+            { (player.alive && narratorMessage.length > 0) && 
+                <button 
+                    className="mt-4 w-full py-2 px-4 bg-gray-600 text-white font-bold rounded hover:bg-gray-700"
+                    onClick={nextTurn}
+                >
+                    Continue
+                </button>
+            }
         </div>
     );
 }

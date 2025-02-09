@@ -78,13 +78,14 @@ export enum Actions {
     KILL = "kill",
     SLEEP = "sleep",
     CONTINUE = "continue",
-    POLL = "poll"
+    POLL = "poll",
+    NEXT = "next"
 }
 
 export type SocketData = {
     game_id: string,
     action_type: Actions,
-    voted?: string,
+    voted?: boolean,
     accused?: string,
     discussed?: string,
     defence?: string,

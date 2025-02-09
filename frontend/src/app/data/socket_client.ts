@@ -6,11 +6,12 @@ export function fetchGameState(socket: WebSocket, id: string) {
 }
 
 export function castVote(socket: WebSocket, id: string, vote: "Y" | "N") {
-    console.log(`castVote called with id: ${id}, vote: ${vote}`);
+    const yes: boolean = (vote == 'Y');
+    console.log(`castVote called with id: ${id}, vote: ${yes}`);
     const data: SocketData = {
         game_id: id,
         action_type: Actions.VOTE,
-        voted: vote
+        voted: yes
     };
 
     socket.send(JSON.stringify(data));
@@ -110,6 +111,16 @@ export function defend(socket: WebSocket, id: string, defence: string) {
         game_id: id,
         action_type: Actions.DEFEND,
         defence: defence
+    };
+
+    socket.send(JSON.stringify(data));
+}
+
+export function nextTurn(socket: WebSocket, id: string) {
+    console.log(`Starting next round`);
+    const data: SocketData = {
+        game_id: id,
+        action_type: Actions.NEXT,
     };
 
     socket.send(JSON.stringify(data));
