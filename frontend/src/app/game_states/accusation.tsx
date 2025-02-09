@@ -34,6 +34,7 @@ export default function Accusation({ humanPlayer, players, onAccuse, sendDefence
                 title="Select a player to accuse:"
                 ignore_mafia={false}
                 ignore_self={true}
+                night={false}
             />
             {selectedPlayer && <p className="mt-4 text-lg">You have accused: <span className="font-bold">{selectedPlayer.name}</span></p>}
             <div className='mt-5'>

@@ -27,7 +27,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     };
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/ws/game");
+        const ws = new WebSocket(`ws://localhost:8000/ws/game/${game_id}`);
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -40,7 +40,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         return () => {
             ws.close();
         };
-    }, []);
+    }, [game_id]);
 
     const start = () => {
         setState((prevState) => ({

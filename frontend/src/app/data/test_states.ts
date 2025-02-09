@@ -35,6 +35,21 @@ export const testStates: GameState[] = [
         accusing: ""
     },
     {
+        human: "Charlie",
+        players: [
+            { name: "Alice", alive: true, role: Role.TOWNSPERSON },
+            { name: "Bob", alive: false, role: Role.MAFIA },
+            { name: "Charlie", alive: false, role: Role.DETECTIVE },
+            { name: "Diana", alive: true, role: Role.DOCTOR }
+        ],
+        state: State.NIGHT,
+        events: ["Day 1: Bob was accused and eliminated", "Night 2: Mafia is planning"],
+        discussion: [],
+        accusation: "",
+        accusationNumber: 0,
+        accusing: ""
+    },
+    {
         human: "Alice",
         players: [
             { name: "Alice", alive: true, role: Role.TOWNSPERSON },

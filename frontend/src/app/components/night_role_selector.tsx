@@ -23,7 +23,14 @@ export default function NightRoleSelector({ player, players, onSelect }: NightRo
     return (
         <div className="p-4 bg-gray-800 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-white mb-2">{prompts[player.role]}</h3>
-            <PlayerSelector player={player} players={players} onSelect={onSelect} ignore_mafia={player.role === Role.MAFIA} ignore_self={player.role === Role.MAFIA || player.role === Role.DETECTIVE}/>
+            <PlayerSelector 
+                player={player} 
+                players={players} 
+                onSelect={onSelect} 
+                ignore_mafia={player.role === Role.MAFIA} 
+                ignore_self={player.role === Role.MAFIA || player.role === Role.DETECTIVE}
+                night={true}
+            />
         </div>
     );
 }
