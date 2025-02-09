@@ -377,7 +377,7 @@ class GPTManager:
             "content" : [
                 {
                     "type" : "text",
-                    "text" : f"Narrator: You have been accused. Please defend yourself with a 2-3 sentence response."
+                    "text" : f"Narrator: You have been accused and people will soon vote to execute you if they think you are the mafia. Please defend yourself with a 4-5 sentence response."
                 }
             ]
         })
