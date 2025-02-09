@@ -8,7 +8,7 @@ import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
 import { GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
-import { accusePlayer, castVote, defend, discuss, healPlayer, investigatePlayer, killPlayer, sleepNight } from "../data/socket_client";
+import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, sleepNight } from "../data/socket_client";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
     const id = game_id;
@@ -71,6 +71,12 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
+    const continueGame = () => {
+        if (socket) {
+            continueTurn(socket, id);
+        }
+    }
+
     const sendMessage = (message: string) => {
         if (socket) {
             discuss(socket, id, message);
@@ -110,8 +116,10 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
             }
             {state.state === State.DISCUSSION && 
                 <Discussion 
+                    player={human}
                     toDisplay={state.discussion}
                     sendMessage={sendMessage}
+                    continueTurn={continueGame}
                 />
             }
             {state.state === State.ACCUSATION && 
@@ -122,6 +130,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                     humanAccusing={state.accuser === humanName}
                     onAccuse={accuse}
                     sendDefenceMessage={sendDefenseMessage}
+                    continueTurn={continueGame}
                 />
             }
             {state.state === State.VOTING && 

@@ -68,7 +68,8 @@ export enum Actions {
     HEAL = "heal",
     INVESTIGATE = "investigate",
     KILL = "kill",
-    SLEEP = "sleep"
+    SLEEP = "sleep",
+    CONTINUE = "continue"
 }
 
 export type SocketData = {

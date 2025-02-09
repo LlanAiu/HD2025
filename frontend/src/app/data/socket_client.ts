@@ -81,6 +81,16 @@ export function sleepNight(socket: WebSocket, id: string) {
     socket.send(JSON.stringify(data));
 }
 
+export function continueTurn(socket: WebSocket, id: string) {
+    console.log("Skipping Human Turn");
+    const data: SocketData = {
+        game_id: id,
+        action_type: Actions.CONTINUE
+    }
+
+    socket.send(JSON.stringify(data));
+}
+
 export function defend(socket: WebSocket, id: string, defence: string) {
     console.log(`defend called with id: ${id}, defence: ${defence}`);
     const data: SocketData = {
