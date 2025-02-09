@@ -13,6 +13,10 @@ class Player:
         self.role = role
         self.is_human = is_human
         self.temperature = temperature
+
+    def __str__(self):
+        ret = f"Name: {self.name}, Role: {self.role}, Human: {self.is_human}, Temperature: {self.temperature}"
+        return ret
         
 
 

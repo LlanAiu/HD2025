@@ -1,14 +1,32 @@
 from player import Player
 from player import Roles
+from enum import Enum
 from player_prompts import GPTManager
 import random
+import json
+
+class State(Enum):
+    READY = "ready",
+    NIGHT = "night",
+    DISCUSSION = "discussion",
+    ACCUSATION = "accusation",
+    VOTING = "voting"
+
 
 class Game:
     human = ""
     player_dict = {}
-    alive_list = {}
+    alive_list = []
     all_discussion = []
+    current_state = ""
     GPTManager = None
+    accusations = 0
+    is_human_accuser = False
+    accuser = ""
+    accused = ""
+    current_night_summary = ""
+    current_discussion = []
+    current_votes = []
 
 
     def __init__(self, human_name:str, num_players:int):
@@ -22,17 +40,22 @@ class Game:
         
         self.human = human_name
         self.player_dict = self.role_assigner(num_players, num_mafia, num_villagers)
-        for name in self.player_dict.keys():
+
+        for name in list(self.player_dict.keys()):
             self.alive_list.append(name)
+
         
         GPT_dict = {}
         for (name, player) in self.player_dict.items():
             GPT_dict[name] = player.role
         
-        self.GPTManager = GPTManager(GPT_dict)  
-        self.run_game() # Loop for game events
+        self.GPTManager = GPTManager(GPT_dict) 
+        for name, player in self.player_dict.items():
+            print(f"{name}: {player.role}, Human: {player.is_human}, Alive: {player.alive}, {player.temperature}")
+
+        self.current_state = State.READY
         
-    def role_assigner(self, num_players: int, num_mafia: int, num_villagers: int):
+    def role_assigner(self, num_players: int, num_mafia: int, num_villagers: int): #WORKS
         """
         Args:
         num_players: int.
@@ -52,9 +75,11 @@ class Game:
         random.shuffle(roles)
 
         for i in range(num_players):
-            self.player_dict[names_list[i]] = Player(True, names_list[i], roles[i], i==0, random.random()) # since human player corresponds to i=0, it sets as True and False for the rest
+            self.player_dict[names_list[i]] = Player(True, names_list[i], roles[i], i==0, random.random()) 
+            # since human player corresponds to i=0, it sets as True and False for the rest
+        return self.player_dict
     
-    def get_names_list(self, num_non_human_players): #TODO: test this
+    def get_names_list(self, num_non_human_players): #WORKS
         """
         Arguments: int; number of non-human players.
         Returns a list of names for non-human players.
@@ -67,43 +92,70 @@ class Game:
                              'Maya', 'Rahul', 'Isabel', 'Kofi', 'Serena', 'Jabari', 'Layla', 'Niko',
                                'Tariq', 'Selena', 'Zayn', 'Fatima', 'Jaden', 'Elif', 'Cyrus', 'Lina',
                                  'Tyrese', 'Amira', 'Avrick', 'Srinath', 'Alan', 'Georgiy']
-        all_names.remove(self.human)
-        return random.sample(all_names, num_non_human_players)
+        if (self.human in all_names):
+            all_names.remove(self.human)
+        return random.sample(all_names, num_non_human_players) #temporarily commented out for testing
+        #return all_names[:num_non_human_players] #temp hardcode fore testing
 
-    def kill(self, name):
+
+    def kill(self, name): #WORKS
         """
         Arguments: string; name of player to kill.
         Sets alive status to false in player_dict and removes from alive_list.
         Returns: void.
         """
         self.player_dict[name].alive = False
-        del self.alive_list[name]
+        del self.alive_list[self.alive_list.index(name)]
 
-    def day_accusations(self): #TODO: handle case when human is accused. Frontend might need to handle this.
-        """
-        Arguments: none.
-        Randomly selects a player to accuse another player by calling GPTManager.
-        Returns: string; name of player accused.
-        """
-        accuser = random.choice(self.alive_list)
-        accused = self.GPTManager.who_would_you_like_to_accuse(accuser, accuser.role)[0]
-        self.GPTManager.update_memory("Narrator", f"{accuser} is accusing {accused}.", self.alive_list) #test tuple functionality (can i do [0])
-        return accused
+    def get_day_accuser(self):
+        self.accuser = random.choice(self.alive_list)
+        if self.accuser == self.human:
+            self.is_human_accuser = True
+        else:
+            self.is_human_accuser = False
+        
+    def get_day_accusation(self, who_player_accusing):
+        self.accusations+=1
+        if self.is_human_accuser and who_player_accusing != "":
+            self.accused = who_player_accusing
+        else:
+            self.accused = self.GPTManager.who_would_you_like_to_accuse(self.accuser)[0] 
+        self.GPTManager.update_memory("Narrator", f"{self.accuser} is accusing {self.accused}.", self.alive_list) #test tuple functionality (can i do [0])
+        return self.accused
 
-    def day_voting(self, accused):
+    def get_defense(self, player_defense):
+        if self.accused == self.human and player_defense != "":
+            self.GPTManager.update_memory(self.accused, player_defense, self.alive_list)
+            self.current_discussion.append({"player_name":self.accused, "message":player_defense})
+        elif self.accused != self.human:
+            response = self.GPTManager.defence_from_accusation(self.accused)
+            self.current_discussion.append({"player_name":self.accused, "message":response})
+            self.GPTManager.update_memory(self.accused, response, self.alive_list)
+
+    def day_voting(self, accused, user_vote):
         """
-        Arguments: string; name of player accused.
+        Arguments: string, string; name of player accused, the user's vote that's either "True" or "False".
         Sums accusation votes from all alive players. +1 if for, -1 if against.
         Tells GPTManager who was killed.
         Returns: boolean; True if player is killed, False otherwise.
         """
+        self.current_state = State.VOTING
+        self.current_votes = []
         votes = 0
         for player in self.alive_list:
-            vote_passed = self.GPTManager.vote(player, accused) #check correct function name
-            if vote_passed:
-                votes += 1
+            if (player == self.human):
+                self.current_votes.append({"player_name":player, "Vote":user_vote})
+                if user_vote:
+                    votes += 1
+                else:
+                    votes -= 1
             else:
-                votes -= 1
+                vote_passed = self.GPTManager.vote(player, accused)
+                self.current_votes.append({"player_name":player, "Vote":vote_passed})
+                if vote_passed:
+                    votes += 1
+                else:
+                    votes -= 1
             
         if votes > 0:
             self.kill(accused)
@@ -115,100 +167,140 @@ class Game:
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
             return False #if return false, run accusations again, 3 total times max. if still not passed, no one dies
     
-    def night_voting(self):
+    def night_voting(self, user_choice:str=""):
         """
-        Arguments: none.
+        Arguments: string; name of player the human would like to kill 
+        if the user is part of the mafia (this condition is handled externally).
         If human is mafia, human chooses who to kill. 
         If human is not mafia, one mafia member chosen at random decides who to kill.
         They are not killed, but passed to night_healing().
         GPTManager communication is handled in night_healing().
         Returns: string; name of player killed.
         """
-        person_killed = None
-        if self.human in self.alive_list and self.player_dict[self.human].role == Roles.MAFIA:
-            person_killed = self.GPTManager.who_to_kill(self.human)
+        self.current_state = State.NIGHT
+        person_killed = ""
+        if (user_choice != ""):
+            person_killed = user_choice
             #TODO: maybe ask mafia what they think
-        
-        
         elif self.player_dict[self.human].role != Roles.MAFIA:
             for player in self.alive_list:
                 if self.player_dict[player].role == Roles.MAFIA:
-                    person_killed = self.GPTManager.who_to_kill(player)
+                    person_killed = self.GPTManager.who_to_kill(player) 
+                    #person_killed = "Aaliyah" testing
                     break
         return person_killed
 
-    def night_investigating(self):
+    def night_investigating(self, user_choice): #WORKS without GPTManager
         """
-        Arguments: none.
+        Arguments: string; name of player that the player would like to investigate 
+        if they are the detective (this condition is handled externally).
         The detective is passed to GPTManager.
         Returns: void.
         """
 
-        detective = None
-        for player in self.alive_list:
-            if self.player_dict[player].role == Roles.DETECTIVE:
-                detective = player
-                break
-
-        self.GPTManager.who_to_investigate(detective)
+        if self.player_dict[self.human].role == Roles.DETECTIVE:
+            pass
+            #Front end handles this case
+        else:
+            detective = None
+            for player in self.alive_list:
+                 if self.player_dict[player].role == Roles.DETECTIVE:
+                    detective = player
+                    break
+            self.GPTManager.who_to_investigate(detective)
         #TODO: maybe make narrator say "the detective is investigating someone"
 
-    def night_healing(self, person_killed):
+    def night_healing(self, person_killed, user_choice):
         """
-        Arguments: string; name of player killed by mafia.
+        Arguments: string, string; name of player killed by mafia, name of player to be saved by human 
+        if they are the doctor (this condition is handled externally).
         The argument is checked to see if the doctor saved them.
         The doctor is passed to GPTManager.
         Returns: void.
         """
-        doctor = None
-        for player in self.alive_list:
-            if self.player_dict[player].role == Roles.DOCTOR:
-                doctor = player
-                break
-
-        person_saved = self.GPTManager.who_to_heal(doctor)
+        if self.player_dict[self.human].role == Roles.DOCTOR:
+            person_saved = user_choice
+        else:
+            doctor = None
+            for player in self.alive_list:
+                if self.player_dict[player].role == Roles.DOCTOR:
+                    doctor = player
+                    break
+            person_saved = self.GPTManager.who_to_save(doctor)
+            # person_saved = "Naomi" # for testing
+            
         if person_killed == person_saved:
             sentence = f"The mafia attempted to kill {person_killed}, but the doctor saved them."
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
+            self.current_night_summary = sentence
         else:
             sentence = f"{person_killed} was killed by the mafia."
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
+            self.current_night_summary = sentence
+            # print(person_killed)
             self.kill(person_killed)
     
     def discussion(self):
         """
         Discussion method: uses random-weighted choice based off player dialogue to API call.
         """
+        self.current_state = State.DISCUSSION
+        self.current_discussion = []
         discussion_limit = random.randint(5,15)
         speaking_probabilities = dict.fromkeys(self.alive_list, 1/len(self.alive_list)) # Equal probability of speaking.
-        for i in range(discussion_limit):
-            talking = random.choices(self.alive_list, weights=list(speaking_probabilities.values()))
+        for _ in range(discussion_limit):
+            talking = random.choices(self.alive_list, weights=list(speaking_probabilities.values()))[0]
             response = self.GPTManager.contribute_to_general_discussion(talking)
+            self.current_discussion.append({"player_name":talking, "message":response})
             self.GPTManager.update_memory(talking, response, self.alive_list)
             for j in self.alive_list:
                 if j in response: # Increase their responsiveness by 10% (0.1), and decrease everyone else's proportion by 0.1/(n-1)
                     for k in list(speaking_probabilities.keys()):
                         speaking_probabilities[k] += 0.1 if j == k else -0.1/(len(self.alive_list)-1)
-                        
+        self.current_state = State.ACCUSATION
+
     def listen_for_user(self, user_message):
+        """
+        Listens to see if the user chats anything during discussion.
+        """
         # TODO: Testing to see if this works, if not we need async.
-        self.GPTManager.contribute_to_general_discussion(self.human,user_message)
+        self.current_discussion.append({"player_name":self.human, "message":user_message})
+        self.GPTManager.update_memory(self.human,user_message, self.alive_list)
         
     def determine_game_over(self):
-        return 2*self.count_type(Roles.MAFIA) >= self.get_list_of_active_players() # Crazy inequality math, figure it out lol.
+        return 2*self.count_type(Roles.MAFIA) >= len(self.alive_list) # Crazy inequality math, figure it out lol.
     
     def count_type(self, search:Roles):
         count = 0
         for player in self.alive_list:
-            if player.role == search:
+            if self.player_dict[player].role == search:
                 count += 1
         return count
 
+    def get_gamestate_json(self):
+        data = {}
+        data['human'] = self.human
+        data['players'] = []
+        for name, player in self.player_dict.items():
+            json_player = {}
+            json_player['name'] = name
+            json_player['alive'] = player.alive
+            json_player['role'] = player.role
+            data['players'].append(json_player)
+        data['state'] = self.current_state
+        data['night_summary'] = self.current_night_summary
+        data['discussion'] = self.current_discussion
+        data['accused'] = self.accused
+        data['accusationNumber'] = self.accusations
+        data['accuser'] = self.accuser
+        data['votes'] = self.current_votes
+        json_data = json.dumps(data)
+        print(json_data)
+        return json_data
 
+    """
     def run_game(self):
-        """
-        Main Game loop: Calls all event functions.
-        """
+        #Main Game loop: Calls all event functions.
         while not self.determine_game_over():
             person_killed = self.night_voting()
             self.night_investigating()
@@ -223,5 +315,21 @@ class Game:
 
                 accused = self.day_accusations()
                 i+=1
-        
-            
+    """
+
+if __name__ == "__main__":
+    game = Game("human", 7)
+    person_killed = game.night_voting()
+    #game.night_investigating("Aaliyah")
+    game.night_healing(person_killed, "")
+    game.discussion()
+    #accused = game.day_accusations()
+    """
+    i=0
+    while i < 3:
+        if game.day_voting(accused):
+            break
+
+        accused = game.day_accusations()
+        i+=1
+    """
