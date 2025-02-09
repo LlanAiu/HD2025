@@ -1,17 +1,29 @@
 # builtin
 from contextlib import asynccontextmanager
+import json
 
 # external
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from typing import List
 
 # internal
+from game import Game
+from player import Player
+from player_prompts import GPTManager
+
+app = FastAPI()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.games = {}
     yield
 
-app: FastAPI = FastAPI(lifespan=lifespan)
+@app.post("/game/new")
+async def new_game(data: json):
+    id = data["game_id"]
+    player_name = data["player_name"]
+    num_players = int(data["num_players"])
+    app.state.games[id] = Game(player_name, num_players)
 
 class ConnectionManager:
     def __init__(self):
@@ -35,43 +47,72 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-test_data = {
-    "human": "player1",
-    "players": [
-        {"name": "player1", "alive": True, "role": "villager"},
-        {"name": "player2", "alive": True, "role": "mafia"},
-        {"name": "player3", "alive": True, "role": "detective"},
-        {"name": "player4", "alive": True, "role": "doctor"}
-    ],
-    "state": "discussion",
-    "night_summary": ["Literally nothing happened last night"],
-    "discussion": [
-        {"player_name": "player1", "message": "Let's find the mafia!"},
-        {"player_name": "player2", "message": "I'm not the mafia!"}
-    ],
-    "accused": "",
-    "accusationNumber": 0,
-    "accuser": "",
-    "votes": [
-        {"player_name": "player1", "vote": True},
-        {"player_name": "player2", "vote": False},
-        {"player_name": "player3", "vote": True},
-        {"player_name": "player4", "vote": True}
-    ],
-    "game_over": "mafia_win"
-}
-
 @app.websocket("/ws/game/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
     await manager.connect(game_id, websocket)
     try:
         while True:
-            data = await websocket.receive_json()
-            print("Received:", data)
-            await manager.broadcast(game_id, test_data)
+            message = await websocket.receive_json()  # General receiver
+            game = app.state.games[message[game_id]]
+            if message["action_type"] == "vote":
+                user_vote = message["voted"]
+                game.day_voting(game.accused, user_vote)
+            elif message["action_type"] == "defense":
+                user_defense = message["defense"]
+                game.get_defense(user_defense)
+            elif message["action_type"] == "accuse":
+                accuse_choice = message["accused"]
+                game.day_accusations(game.is_human_accuser,accuse_choice)
+            elif message["action_type"] == "discuss":
+                user_message = message["discuss"]
+                game.listen_for_user(user_message)
+            elif message["action_type"] == "heal":
+                heal_choice = message["healed"]
+                game.night_voting()
+                game.night_healing(heal_choice)
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
+            elif message["action_type"] == "investigate":
+                investigate_choice = message["investigate"]
+                game.night_voting()
+                game.night_healing()
+                game.night_investigating(investigate_choice)
+                game.discussion()
+                game.get_day_accuser()
+            elif message["action_type"] == "kill":
+                kill_choice = message["kill"]
+                game.night_voting(kill_choice)
+                game.night_healing()
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
+            elif message["action_type"] == "sleep":
+                game.night_voting()
+                game.night_healing()
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
+            elif message["action_type"] == "continue":
+                match message["next_state"]:
+                    case "night":
+                        game.night_voting()
+                        game.night_healing()
+                        game.night_investigating()
+                    case "discussion":
+                        game.discussion()
+                        game.get_day_accuser()
+                    case "accusation":
+                        game.get_day_accusation()
+                        game.get_defense()
+                    case "voting":
+                        game.day_voting()
+
+            elif message["action_type"] == "poll":
+                pass
+
+        
+            await manager.broadcast(game_id, game.get_gamestate_json())
+
     except WebSocketDisconnect:
         manager.disconnect(game_id, websocket)
-
-@app.get("/")
-def root():
-    return {"message" : "Hello world!"}
