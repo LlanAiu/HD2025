@@ -12,7 +12,7 @@ class Roles(Enum):
 
 TEMPERATURE_SETTING = 1
 GENERAL_TOKEN_LIMIT = 200
-
+MESSAGE_SIZE_LIMIT = 15
 
 class GPTManager:
     playersAlive = []
@@ -105,10 +105,14 @@ class GPTManager:
                 }
             ]
         }
+
         self.villagerKnowledge.append(memoryEntry)
         self.detectiveKnowledge.append(memoryEntry)
         self.doctorKnowledge.append(memoryEntry)
         self.mafiaKnowledge.append(memoryEntry)
+
+        self.summarize()
+
         self.playersAlive = players_alive
         self.mafiaAlive = []
         self.townsfolkAlive = []
@@ -117,6 +121,61 @@ class GPTManager:
                 self.mafiaAlive.append(player)
             else:
                 self.townsfolkAlive.append(player)
+
+    def summarize(self):
+        if len(self.villagerKnowledge) > MESSAGE_SIZE_LIMIT:
+            amountToCut = int(MESSAGE_SIZE_LIMIT - len(self.villagerKnowledge) / 2)
+            summary = self.find_summary_of_messages(self.villagerKnowledge[:amountToCut])
+            self.villagerKnowledge = self.villagerKnowledge[amountToCut:]
+            self.villagerKnowledge.insert(0, summary)
+            print(self.villagerKnowledge)
+        if len(self.mafiaKnowledge) > MESSAGE_SIZE_LIMIT:
+            amountToCut = int(MESSAGE_SIZE_LIMIT - len(self.mafiaKnowledge) / 2)
+            summary = self.find_summary_of_messages(self.mafiaKnowledge[:amountToCut])
+            self.mafiaKnowledge = self.mafiaKnowledge[amountToCut:]
+            self.mafiaKnowledge.insert(0, summary)
+        if len(self.doctorKnowledge) > MESSAGE_SIZE_LIMIT:
+            amountToCut = int(MESSAGE_SIZE_LIMIT - len(self.doctorKnowledge) / 2)
+            summary = self.find_summary_of_messages(self.doctorKnowledge[:amountToCut])
+            self.doctorKnowledge = self.doctorKnowledge[amountToCut:]
+            self.doctorKnowledge.insert(0, summary)
+        if len(self.doctorKnowledge) > MESSAGE_SIZE_LIMIT:
+            amountToCut = int(MESSAGE_SIZE_LIMIT - len(self.detectiveKnowledge) / 2)
+            summary = self.find_summary_of_messages(self.detectiveKnowledge[:amountToCut])
+            self.detectiveKnowledge = self.detectiveKnowledge[amountToCut:]
+            self.detectiveKnowledge.insert(0, summary)
+
+
+    def find_summary_of_messages(self, messages):
+        prompt = (  
+            f"You are a gamemaster for the social deduction game of mafia. Your goal is to summarize the events, information shared between players, deaths, and suspicions of all of the different characters.",
+            f"You will be given previous summaries as well as the chat logs of the game, which you will use to compile the information you think is most important for players to remember. Make sure to include what players are suspicious of other players",
+            f"Do not start your response with a reply to my question, just start listing the important facts about the game state, claims, player dynamics, and so on. Use few tokens to convey all important information to another instance of claude."
+        )
+        prompt = "\n".join(prompt)
+
+        finalEntry = {
+            "role" : "user",
+            "content" : [
+                {
+                    "type" : "text",
+                    "text" : "Please summarize the preceding conversation / summary in 5-20 bullet points involving major events, major information shared, deaths, and player's thoughts / feelings. Use less bullet points at the beginning of the game when there is less relavent information"
+                }
+            ]
+        }
+        messages.append(finalEntry)
+
+        message = self.client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=GENERAL_TOKEN_LIMIT + 100,
+            temperature=TEMPERATURE_SETTING,
+            system=prompt,
+            messages=messages
+        )
+        response = message.content[0].text.lower()
+        print(response)
+        return {"role" : "user", "content" : [{"type" : "text", "text" : "The following bullet points are a summary of the game up to this point. Use this as your memory bank to determine the best response.\n" + response}]}
+
 
 
     def who_to_kill(self, player_being_asked):
