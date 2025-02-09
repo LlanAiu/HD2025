@@ -70,7 +70,17 @@ export async function get_initial_state(id: string): Promise<FetchResult<GameSta
         ],
         accused: "Bob",
         accusationNumber: 1,
-        accuser: "Alice"
+        accuser: "Alice",
+        votes: [
+            {
+                player_name: "Alice",
+                vote: true
+            },
+            {
+                player_name: "Bob",
+                vote: false
+            }
+        ]
     };
     
     return {

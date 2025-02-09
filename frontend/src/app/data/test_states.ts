@@ -17,7 +17,13 @@ export const testStates: GameState[] = [
         ],
         accused: "Bob",
         accusationNumber: 1,
-        accuser: "Alice"
+        accuser: "Alice",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Bob", vote: false },
+            { player_name: "Charlie", vote: true },
+            { player_name: "Diana", vote: false }
+        ]
     },
     {
         human: "Bob",
@@ -32,7 +38,13 @@ export const testStates: GameState[] = [
         discussion: [],
         accused: "",
         accusationNumber: 0,
-        accuser: ""
+        accuser: "",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Bob", vote: false },
+            { player_name: "Charlie", vote: true },
+            { player_name: "Diana", vote: false }
+        ]
     },
     {
         human: "Charlie",
@@ -47,7 +59,13 @@ export const testStates: GameState[] = [
         discussion: [],
         accused: "",
         accusationNumber: 0,
-        accuser: ""
+        accuser: "",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Bob", vote: false },
+            { player_name: "Charlie", vote: true },
+            { player_name: "Diana", vote: false }
+        ]
     },
     {
         human: "Alice",
@@ -65,7 +83,12 @@ export const testStates: GameState[] = [
         ],
         accused: "Alice",
         accusationNumber: 2,
-        accuser: "Charlie"
+        accuser: "Charlie",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Bob", vote: false },
+            { player_name: "Charlie", vote: true }
+        ]
     },
     {
         human: "Alice",
@@ -80,7 +103,12 @@ export const testStates: GameState[] = [
         discussion: [],
         accused: "",
         accusationNumber: 0,
-        accuser: ""
+        accuser: "",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Charlie", vote: true },
+            { player_name: "Diana", vote: false }
+        ]
     },
     {
         human: "Alice",
@@ -95,6 +123,11 @@ export const testStates: GameState[] = [
         discussion: [],
         accused: "Bob",
         accusationNumber: 1,
-        accuser: "Alice"
-    },
+        accuser: "Alice",
+        votes: [
+            { player_name: "Alice", vote: true },
+            { player_name: "Charlie", vote: true },
+            { player_name: "Diana", vote: false }
+        ]
+    }
 ];

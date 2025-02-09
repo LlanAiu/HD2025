@@ -1,10 +1,12 @@
 import { useState, KeyboardEvent } from 'react';
+import { Message } from '../data/types';
 
 interface DiscussionProps {
+    toDisplay: Message[]
     sendMessage: (message: string) => void;
 }
 
-export default function Discussion({sendMessage} : DiscussionProps) {
+export default function Discussion({toDisplay, sendMessage} : DiscussionProps) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
 

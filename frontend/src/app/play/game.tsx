@@ -8,7 +8,7 @@ import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
 import { GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
-import { accusePlayer, castVote, defend, discuss, healPlayer, investigatePlayer, killPlayer } from "../data/socket_client";
+import { accusePlayer, castVote, defend, discuss, healPlayer, investigatePlayer, killPlayer, sleepNight } from "../data/socket_client";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
     const id = game_id;
@@ -16,7 +16,6 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     const [state, setState] = useState<GameState>(init_state);
     const [round, setRound] = useState<number>(1);
     const [socket, setSocket] = useState<WebSocket | null>(null);
-    const [messages, setMessages] = useState(["What"]);
     const [index, setIndex] = useState(0);
 
     const humanName = state.human;
@@ -66,6 +65,12 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
+    const sleep = () => {
+        if (socket) {
+            sleepNight(socket, id);
+        }
+    }
+
     const sendMessage = (message: string) => {
         if (socket) {
             discuss(socket, id, message);
@@ -84,6 +89,8 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         }
     }
 
+
+
     return (
         <>
             {state.state === State.READY && 
@@ -98,10 +105,12 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                     player={human} 
                     players={state.players} 
                     handleSelect={nightAction} 
+                    sleep={sleep}
                 />
             }
             {state.state === State.DISCUSSION && 
                 <Discussion 
+                    toDisplay={state.discussion}
                     sendMessage={sendMessage}
                 />
             }

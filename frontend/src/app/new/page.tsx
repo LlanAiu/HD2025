@@ -22,10 +22,10 @@ export default function Page() {
     }
 
     return (
-        <div>
-            <form onSubmit={e => handleSubmit(e)}>
-                <div>
-                    <label htmlFor="game_id">Game ID:</label>
+        <div className="flex justify-center items-center min-h-screen bg-gray-100">
+            <form onSubmit={e => handleSubmit(e)} className="bg-white p-6 rounded shadow-md w-full max-w-md">
+                <div className="mb-4">
+                    <label htmlFor="game_id" className="block text-gray-700 font-bold mb-2">Game ID:</label>
                     <input
                         type="text"
                         name="game_id"
@@ -34,11 +34,12 @@ export default function Page() {
                         value={id}
                         onChange={(e) => setId(e.target.value)}
                         required
+                        className="w-full px-3 py-2 border rounded"
                     />
                 </div>
 
-                <div>
-                    <label htmlFor="name">Name:</label>
+                <div className="mb-4">
+                    <label htmlFor="name" className="block text-gray-700 font-bold mb-2">Name:</label>
                     <input
                         type="text"
                         name="name"
@@ -47,11 +48,12 @@ export default function Page() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
+                        className="w-full px-3 py-2 border rounded"
                     />
                 </div>
 
-                <div>
-                    <label htmlFor="players"># of Players:</label>
+                <div className="mb-4">
+                    <label htmlFor="players" className="block text-gray-700 font-bold mb-2"># of Players:</label>
                     <input
                         type="range"
                         name="players"
@@ -61,11 +63,12 @@ export default function Page() {
                         value={players}
                         onChange={(e) => setPlayers(Number(e.target.value))}
                         required
+                        className="w-full"
                     />
-                    <p>{players}</p>
+                    <p className="text-center mt-2">{players}</p>
                 </div>
                 
-                <button type="submit">Play</button>
+                <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Play</button>
             </form>
         </div>
     );

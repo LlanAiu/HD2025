@@ -25,7 +25,8 @@ export type GameState = {
     discussion: Message[],
     accused: string,
     accusationNumber: number,
-    accuser: string
+    accuser: string,
+    votes: Vote[]
 }
 
 export type PlayerData = {
@@ -37,6 +38,11 @@ export type PlayerData = {
 export type Message = {
     player_name: string,
     message: string
+}
+
+export type Vote = {
+    player_name: string,
+    vote: boolean
 }
 
 export enum Role {
@@ -61,7 +67,8 @@ export enum Actions {
     DEFEND = "defend",
     HEAL = "heal",
     INVESTIGATE = "investigate",
-    KILL = "kill"
+    KILL = "kill",
+    SLEEP = "sleep"
 }
 
 export type SocketData = {
