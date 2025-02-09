@@ -125,6 +125,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
             {state.state === State.DISCUSSION && 
                 <Discussion 
                     player={human}
+                    night_summary={state.night_summary}
                     toDisplay={state.discussion}
                     sendMessage={sendMessage}
                     continueTurn={continueGame}

@@ -3,13 +3,14 @@ import { Message, PlayerData, State } from '../data/types';
 
 interface DiscussionProps {
     player: PlayerData;
+    night_summary: string;
     toDisplay: Message[];
     sendMessage: (message: string) => void;
     continueTurn: (next: State) => void;
     pollDiscussion: () => void;
 }
 
-export default function Discussion({player, toDisplay, sendMessage, continueTurn, pollDiscussion} : DiscussionProps) {
+export default function Discussion({player, toDisplay, night_summary, sendMessage, continueTurn, pollDiscussion} : DiscussionProps) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState<Message[]>(toDisplay);
 
@@ -37,6 +38,9 @@ export default function Discussion({player, toDisplay, sendMessage, continueTurn
 
     return (
         <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
+            <div className="mb-4">
+                <p className="text-lg font-semibold">{night_summary}</p>
+            </div>
             <div className="mb-4">
                 <p className="text-2xl font-bold">Chat</p>
             </div>

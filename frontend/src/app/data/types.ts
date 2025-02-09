@@ -21,7 +21,7 @@ export type GameState = {
     human: string
     players: PlayerData[],
     state: State,
-    night_summary: string[],
+    night_summary: string,
     discussion: Message[],
     accused: string,
     accusationNumber: number,
