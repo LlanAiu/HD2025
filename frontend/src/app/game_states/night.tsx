@@ -15,8 +15,8 @@ export default function Night({ round, player, players }: NightProps) {
     }
 
     return (
-        <div>
-            <h2>Night {round}</h2>
+        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto text-center">
+            <h2 className="text-2xl font-bold mb-4">Night {round}</h2>
             <NightRoleSelector player={player} players={players} onSelect={handleSelect} />
         </div>
     );

@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent} from 'react';
+import { useState, KeyboardEvent } from 'react';
 
 export default function Discussion() {
     const [message, setMessage] = useState('');
@@ -18,22 +18,30 @@ export default function Discussion() {
     };
 
     return (
-        <div>
-            <div>
-                <p>Chat</p>
+        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
+            <div className="mb-4">
+                <p className="text-2xl font-bold">Chat</p>
             </div>
-            <div>
+            <div className="mb-4 space-y-2">
                 {messages.map((msg, index) => (
-                    <div key={index}>{msg}</div>
+                    <div key={index} className="p-2 bg-white border border-gray-200 rounded">{msg}</div>
                 ))}
             </div>
-            <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-            />
-            <button onClick={handleSend}>Send</button>
+            <div className="flex space-x-2">
+                <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="flex-1 p-2 border border-gray-300 rounded"
+                />
+                <button 
+                    onClick={handleSend}
+                    className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                >
+                    Send
+                </button>
+            </div>
         </div>
     );
 }

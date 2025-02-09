@@ -1,6 +1,5 @@
 import { PlayerData } from "../data/types";
 
-
 export default function Ready({ player } : { player : PlayerData}) {
     
     function handleClick() {
@@ -17,12 +16,15 @@ export default function Ready({ player } : { player : PlayerData}) {
     const roleDescription = roleDescriptions[player.role.valueOf()] || "No description available for this role.";
 
     return (
-        <div>
-            <p>You are role {player.role}</p>
-
-            <p> {roleDescription} </p>
-
-            <button onClick={handleClick}>Ready?</button>
+        <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto text-center">
+            <p className="text-lg mb-4">You are role <span className="font-bold">{player.role}</span></p>
+            <p className="mb-6">{roleDescription}</p>
+            <button 
+                className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                onClick={handleClick}
+            >
+                Ready?
+            </button>
         </div>
     );
 }

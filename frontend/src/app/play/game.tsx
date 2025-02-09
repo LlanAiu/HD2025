@@ -39,6 +39,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             setMessages((prev) => [...prev, data.message]);
+            console.log(messages);
         };
 
         setSocket(ws);
@@ -56,10 +57,6 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
 
     return (
         <>
-
-            <div className="mb-5">
-                <p>Game with ID: {id}</p>
-            </div>
             {state.state === State.READY && <Ready player={player} />}
             {state.state === State.NIGHT && <Night round={round} player={player} players={state.players} />}
             {state.state === State.DISCUSSION && <Discussion />}
@@ -74,13 +71,6 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                 }}>
                     Change State
                 </button>
-
-                <button className='block' onClick={sendMessage}>Send Message</button>
-                <ul className='block'>
-                    {messages.map((msg, index) => (
-                        <li key={index}>{msg}</li>
-                    ))}
-                </ul>
             </div>
         </>
     );
