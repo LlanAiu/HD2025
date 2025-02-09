@@ -9,7 +9,7 @@ from typing import List
 # internal
 from game import Game
 from player import Player
-from player_prompts import GPTManager
+from player_prompts import GPTManager, Roles
 from models import Message, NewGameRequest, GetGameRequest, GetGameResponse, PlayerData, Vote
 from environment import Settings
 
@@ -86,12 +86,14 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.night_voting()
                 game.night_healing(heal_choice)
                 game.night_investigating()
+                await manager.broadcast(game_id, game.get_gamestate_json())
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "investigate":
                 game.night_voting()
                 game.night_healing()
                 game.night_investigating()
+                await manager.broadcast(game_id, game.get_gamestate_json())
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "kill":
@@ -99,12 +101,14 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.night_voting(kill_choice)
                 game.night_healing()
                 game.night_investigating()
+                await manager.broadcast(game_id, game.get_gamestate_json())
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "sleep":
                 game.night_voting()
                 game.night_healing()
                 game.night_investigating()
+                await manager.broadcast(game_id, game.get_gamestate_json())
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "continue":

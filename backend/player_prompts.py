@@ -47,7 +47,7 @@ class GPTManager:
                 self.townsfolkAlive.append(player)
 
     def generate_system_prompt_for_player(self, playerName):
-        if (self.playerRoles[playerName] == 'Roles.VILLAGER'):
+        if self.playerRoles[playerName] == Roles.VILLAGER:
             prompt = [  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is citizen. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
@@ -58,7 +58,7 @@ class GPTManager:
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             ]
             return "\n".join(prompt)
-        if (self.playerRoles[playerName] == 'Roles.MAFIA'):
+        if self.playerRoles[playerName] == Roles.MAFIA:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is mafia. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen. The mafia  are: {", ".join(player for player in self.mafia)}",
                 f"Your goal is to kill all the townsfolk before the players vote you out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}.\n",
@@ -69,7 +69,7 @@ class GPTManager:
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return "\n".join(prompt)
-        if (self.playerRoles[playerName] == 'Roles.DETECTIVE'):
+        if self.playerRoles[playerName] == Roles.DETECTIVE:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. When you investigate a player, you will learn if they are the mafia. If you find mafia, you should try to accuse them and convince others to vote them out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
@@ -80,7 +80,7 @@ class GPTManager:
                 f"<example 3>\nNarrator: Would you like to vote for Bill? Respond with yes or no.\n{playerName}: Yes."
             )
             return "\n".join(prompt)
-        if (self.playerRoles[playerName] == 'Roles.DOCTOR'):
+        if self.playerRoles[playerName] == Roles.DOCTOR:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is doctor. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. Every night you will be able to heal a player, including yourself, and hopefully prevent them from being killed by the mafia. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
@@ -92,8 +92,11 @@ class GPTManager:
             )
             return "\n".join(prompt)
         print(f"PLAYER SYSTEM PROMPT NOT FOUND FOR PLAYER {playerName}")
-        print(self.playerRoles)
-        print(self.playerRoles[playerName])
+        print(self.playerRoles) # Good Dict
+        print(self.playerRoles[playerName]) #Roles.DETECTIVE
+        print(type(self.playerRoles[playerName]))
+        print(type(Roles.DETECTIVE))
+        print(self.playerRoles[playerName] == Roles.DETECTIVE) #False
         return ""
 
     def update_memory(self, name, text, players_alive):

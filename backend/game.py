@@ -1,7 +1,6 @@
 from player import Player
-from player import Roles
 from enum import Enum
-from player_prompts import GPTManager
+from player_prompts import GPTManager, Roles
 import random
 import json
 from models import GetGameResponse, PlayerData, Message, Vote
@@ -210,6 +209,7 @@ class Game:
         """
 
         if self.player_dict[self.human].role == Roles.DETECTIVE:
+            print("Player Investigated")
             pass
             #Front end handles this case
         else:
@@ -218,6 +218,8 @@ class Game:
                  if self.player_dict[player].role == Roles.DETECTIVE:
                     detective = player
                     break
+            if detective == None:
+                return
             self.GPTManager.who_to_investigate(detective)
         #TODO: maybe make narrator say "the detective is investigating someone"
 
@@ -240,9 +242,11 @@ class Game:
                 if self.player_dict[player].role == Roles.DOCTOR:
                     doctor = player
                     break
-            person_saved = self.GPTManager.who_to_save(doctor)
+            if doctor != None:
+                person_saved = self.GPTManager.who_to_save(doctor)
             #person_saved = "Aaliyah" # for testing
             
+        print(f"Saved {person_saved}")
         if person_killed == person_saved:
             sentence = f"The mafia attempted to kill {person_killed}, but the doctor saved them."
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list) #testing
@@ -306,16 +310,16 @@ class Game:
             json_player = {}
             json_player['name'] = name
             json_player['alive'] = player.alive
-            json_player['role'] = player.role
+            json_player['role'] = player.role.value
             data['players'].append(json_player)
-        data['state'] = self.current_state
+        data['state'] = self.current_state.value
         data['night_summary'] = self.current_night_summary
         data['discussion'] = self.current_discussion
         data['accused'] = self.accused
         data['accusationNumber'] = self.accusations
         data['accuser'] = self.accuser
         data['votes'] = self.current_votes
-        data['game_result'] = self.determine_game_result()
+        data['game_result'] = self.determine_game_result().value
         json_data = json.dumps(data)
         print(json_data)
         return json_data

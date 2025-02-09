@@ -1,11 +1,4 @@
-from enum import Enum
-
-class Roles(Enum):
-    VILLAGER = "villager"
-    MAFIA = "mafia"
-    DOCTOR = "doctor"
-    DETECTIVE = "detective"
-
+from player_prompts import Roles
 class Player:
     def __init__(self, alive:bool, name:str, role:Roles, is_human:bool, temperature:float):
         self.alive = True
