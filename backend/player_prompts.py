@@ -44,7 +44,6 @@ class GPTManager:
                 self.townsfolkAlive.append(player)
 
     def generate_system_prompt_for_player(self, playerName):
-        # TODO Add Examples and say The following is the game as it has happened so far...
         if (self.playerRoles[playerName] == Roles.VILLAGER):
             prompt = [  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is citizen. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
@@ -129,7 +128,6 @@ class GPTManager:
             summary = self.find_summary_of_messages(self.villagerKnowledge[:amountToCut])
             self.villagerKnowledge = self.villagerKnowledge[amountToCut:]
             self.villagerKnowledge.insert(0, summary)
-            print(self.villagerKnowledge)
         if len(self.mafiaKnowledge) > MESSAGE_SIZE_LIMIT:
             amountToCut = int(MESSAGE_SIZE_LIMIT - len(self.mafiaKnowledge) / 2)
             summary = self.find_summary_of_messages(self.mafiaKnowledge[:amountToCut])
@@ -174,7 +172,6 @@ class GPTManager:
             messages=messages
         )
         response = message.content[0].text.lower()
-        print(response)
         return {"role" : "user", "content" : [{"type" : "text", "text" : "The following bullet points are a summary of the game up to this point. Use this as your memory bank to determine the best response.\n" + response}]}
 
 
@@ -487,7 +484,6 @@ class GPTManager:
         )
 
         response = message.content[0].text.lower()
-        print(response)
         if ("yes" in response):
             return True
         elif ("no" in response):
