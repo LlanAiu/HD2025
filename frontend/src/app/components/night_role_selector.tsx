@@ -4,7 +4,7 @@ import PlayerSelector from "./player_selector";
 interface NightRoleSelectorProps {
     player: PlayerData;
     players: PlayerData[];
-    onSelect: (player: PlayerData) => void;
+    onSelect: (player: PlayerData, selectedPlayer: PlayerData) => void;
 }
 
 const activeNightRoles = [Role.MAFIA, Role.DETECTIVE, Role.DOCTOR];
@@ -23,7 +23,7 @@ export default function NightRoleSelector({ player, players, onSelect }: NightRo
     return (
         <div className="p-4 bg-gray-800 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-white mb-2">{prompts[player.role]}</h3>
-            <PlayerSelector players={players} onSelect={onSelect} ignore_mafia={player.role === Role.MAFIA}/>
+            <PlayerSelector player={player} players={players} onSelect={onSelect} ignore_mafia={player.role === Role.MAFIA} ignore_self={player.role === Role.MAFIA || player.role === Role.DETECTIVE}/>
         </div>
     );
 }

@@ -8,7 +8,7 @@ import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
 import { GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
-import { castVote } from "../data/socket_client";
+import { accusePlayer, castVote, defend, discuss, healPlayer, investigatePlayer, killPlayer } from "../data/socket_client";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
     const id = game_id;
@@ -17,20 +17,13 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     const [round, setRound] = useState<number>(1);
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [messages, setMessages] = useState(["What"]);
-
     const [index, setIndex] = useState(0);
 
     const humanName = state.human;
-    const player: PlayerData = state.players.find(player => player.name === humanName) || {
+    const human: PlayerData = state.players.find(player => player.name === humanName) || {
         name: "Test",
         alive: true,
         role: Role.TOWNSPERSON
-    };
-
-    const vote = (accused: "Y" | "N") => {
-        if (socket) {
-            castVote(socket, game_id, accused);
-        }
     };
 
     useEffect(() => {
@@ -47,22 +40,88 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
         return () => {
             ws.close();
         };
-    }, [])
+    }, []);
 
-    const sendMessage = () => {
+    const start = () => {
+        setState((prevState) => ({
+            ...prevState,
+            state: State.NIGHT
+        }));
+    }
+
+    const vote = (accused: "Y" | "N") => {
         if (socket) {
-            socket.send(JSON.stringify({ message: "Hello from Player!" }));
+            castVote(socket, game_id, accused);
         }
     };
 
+    const nightAction = (player: PlayerData, selectedPlayer: PlayerData) => {
+        if (socket) {
+            if (player.role === Role.DETECTIVE) {
+                investigatePlayer(socket, id, selectedPlayer.name);
+            } else if (player.role === Role.DOCTOR) {
+                healPlayer(socket, id, selectedPlayer.name);
+            } else if (player.role === Role.MAFIA) {
+                killPlayer(socket, id, selectedPlayer.name);
+            }
+        }
+    }
+
+    const sendMessage = (message: string) => {
+        if (socket) {
+            discuss(socket, id, message);
+        }
+    }
+
+    const accuse = (player: PlayerData, selectedPlayer: PlayerData) => {
+        if (socket) {
+            accusePlayer(socket, id, selectedPlayer.name);
+        }
+    }
+
+    const sendDefenseMessage = (message: string) => {
+        if (socket) {
+            defend(socket, id, message);
+        }
+    }
+
     return (
         <>
-            {state.state === State.READY && <Ready player={player} />}
-            {state.state === State.NIGHT && <Night round={round} player={player} players={state.players} />}
-            {state.state === State.DISCUSSION && <Discussion />}
-            {state.state === State.ACCUSATION && <Accusation />}
-            {state.state === State.VOTING && <Voting accused={state.accusation} onVote={vote} />}
-
+            {state.state === State.READY && 
+                <Ready 
+                    player={human} 
+                    onStart={start}
+                />
+            }
+            {state.state === State.NIGHT && 
+                <Night 
+                    round={round} 
+                    player={human} 
+                    players={state.players} 
+                    handleSelect={nightAction} 
+                />
+            }
+            {state.state === State.DISCUSSION && 
+                <Discussion 
+                    sendMessage={sendMessage}
+                />
+            }
+            {state.state === State.ACCUSATION && 
+                <Accusation 
+                    humanPlayer={human}
+                    players={state.players}
+                    humanAccused={state.accusation === humanName}
+                    humanAccusing={state.accusing === humanName}
+                    onAccuse={accuse}
+                    sendDefenceMessage={sendDefenseMessage}
+                />
+            }
+            {state.state === State.VOTING && 
+                <Voting 
+                    accused={state.accusation} 
+                    onVote={vote} 
+                />
+            }
 
             <div className="mt-5">
                 <button className='block' onClick={() => {

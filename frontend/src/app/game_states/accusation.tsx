@@ -2,36 +2,38 @@ import React, { useState } from 'react';
 import { PlayerData, Role } from '../data/types';
 import PlayerSelector from '../components/player_selector';
 
-export default function Accusation() {
+interface AccusationProps {
+    humanPlayer: PlayerData;
+    players: PlayerData[];
+    humanAccused: boolean,
+    humanAccusing: boolean,
+    onAccuse: (player: PlayerData, selectedPlayer: PlayerData) => void;
+    sendDefenceMessage: (message: string) => void;
+}
+
+export default function Accusation({ humanPlayer, players, onAccuse, sendDefenceMessage } : AccusationProps) {
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerData | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
-
-    const players: PlayerData[] = [
-        { name: 'Player1', alive: true, role: Role.TOWNSPERSON },
-        { name: 'Player2', alive: true, role: Role.MAFIA },
-        { name: 'Player3', alive: true, role: Role.DETECTIVE }
-    ];
-
-    const handleAccuse = (player: PlayerData) => {
-        setSelectedPlayer(player);
-    };
 
     const handleSendMessage = () => {
         if (newMessage.trim()) {
             setMessages([...messages, newMessage]);
             setNewMessage('');
+            sendDefenceMessage(newMessage);
         }
     };
 
     return (
         <div className="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-md mx-auto">
             <h2 className="text-2xl font-bold mb-4">Accusation</h2>
-            <PlayerSelector 
+            <PlayerSelector
+                player={humanPlayer}
                 players={players} 
-                onSelect={handleAccuse} 
+                onSelect={onAccuse} 
                 title="Select a player to accuse:"
                 ignore_mafia={false}
+                ignore_self={true}
             />
             {selectedPlayer && <p className="mt-4 text-lg">You have accused: <span className="font-bold">{selectedPlayer.name}</span></p>}
             <div className='mt-5'>

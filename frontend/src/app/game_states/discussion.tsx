@@ -1,6 +1,10 @@
 import { useState, KeyboardEvent } from 'react';
 
-export default function Discussion() {
+interface DiscussionProps {
+    sendMessage: (message: string) => void;
+}
+
+export default function Discussion({sendMessage} : DiscussionProps) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState<string[]>([]);
 
@@ -8,6 +12,7 @@ export default function Discussion() {
         if (message.trim()) {
             setMessages([...messages, message]);
             setMessage('');
+            sendMessage(message);
         }
     };
 

@@ -1,9 +1,14 @@
 import { PlayerData } from "../data/types";
 
-export default function Ready({ player } : { player : PlayerData}) {
+interface ReadyProps {
+    player: PlayerData,
+    onStart: () => void
+}
+
+export default function Ready({ player, onStart } : ReadyProps) {
     
     function handleClick() {
-        console.log("Start game");
+        onStart();
     }
 
     const roleDescriptions: { [key: string]: string } = {
@@ -23,7 +28,7 @@ export default function Ready({ player } : { player : PlayerData}) {
                 className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
                 onClick={handleClick}
             >
-                Ready?
+                Ready
             </button>
         </div>
     );

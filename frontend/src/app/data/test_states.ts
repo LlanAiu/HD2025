@@ -15,7 +15,9 @@ export const testStates: GameState[] = [
             { player_name: "Alice", message: "I think Bob is suspicious." },
             { player_name: "Bob", message: "I'm just a townsperson!" }
         ],
-        accusation: "Bob"
+        accusation: "Bob",
+        accusationNumber: 1,
+        accusing: "Alice"
     },
     {
         human: "Bob",
@@ -28,7 +30,9 @@ export const testStates: GameState[] = [
         state: State.NIGHT,
         events: ["Day 1: Bob was accused and eliminated", "Night 2: Mafia is planning"],
         discussion: [],
-        accusation: ""
+        accusation: "",
+        accusationNumber: 0,
+        accusing: ""
     },
     {
         human: "Alice",
@@ -44,7 +48,9 @@ export const testStates: GameState[] = [
             { player_name: "Alice", message: "We need to find the mafia." },
             { player_name: "Charlie", message: "I have some clues." }
         ],
-        accusation: "Alice"
+        accusation: "Alice",
+        accusationNumber: 2,
+        accusing: "Charlie"
     },
     {
         human: "Alice",
@@ -57,7 +63,9 @@ export const testStates: GameState[] = [
         state: State.DISCUSSION,
         events: ["Day 1: Bob was accused and eliminated", "Night 2: Mafia is planning"],
         discussion: [],
-        accusation: ""
+        accusation: "",
+        accusationNumber: 0,
+        accusing: ""
     },
     {
         human: "Alice",
@@ -70,6 +78,8 @@ export const testStates: GameState[] = [
         state: State.VOTING,
         events: ["Day 1: Bob was accused and eliminated", "Night 2: Mafia is planning"],
         discussion: [],
-        accusation: "Bob"
+        accusation: "Bob",
+        accusationNumber: 1,
+        accusing: "Alice"
     },
 ];

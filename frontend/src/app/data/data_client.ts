@@ -68,7 +68,9 @@ export async function get_initial_state(id: string): Promise<FetchResult<GameSta
             { player_name: "Alice", message: "I think Bob is suspicious." },
             { player_name: "Bob", message: "I'm not the mafia!" }
         ],
-        accusation: "Bob"
+        accusation: "Bob",
+        accusationNumber: 1,
+        accusing: "Alice"
     };
     
     return {

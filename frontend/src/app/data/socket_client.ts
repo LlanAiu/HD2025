@@ -63,3 +63,14 @@ export function killPlayer(socket: WebSocket, id: string, kill: string) {
 
     socket.send(JSON.stringify(data));
 }
+
+export function defend(socket: WebSocket, id: string, defence: string) {
+    const data: SocketData = {
+        game_id: id,
+        action_type: Actions.DEFEND,
+        defence: defence
+    };
+
+    socket.send(JSON.stringify(data));
+}
+
