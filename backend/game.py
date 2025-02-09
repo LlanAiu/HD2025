@@ -126,6 +126,7 @@ class Game:
     def get_day_accusation(self, who_player_accusing: str = ""):
         self.current_discussion = []
         self.current_night_summary = ""
+        self.current_votes = []
         self.accusations+=1
         if self.is_human_accuser and who_player_accusing != "":
             self.accused = who_player_accusing
