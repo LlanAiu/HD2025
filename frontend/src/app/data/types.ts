@@ -26,7 +26,15 @@ export type GameState = {
     accused: string,
     accusationNumber: number,
     accuser: string,
-    votes: Vote[]
+    votes: Vote[],
+    game_over: EndResult
+}
+
+
+export enum EndResult {
+    MAFIA_WIN = "mafia_win",
+    VILLAGER_WIN = "villager_win",
+    IN_PROGRESS = "in_progress"
 }
 
 export type PlayerData = {

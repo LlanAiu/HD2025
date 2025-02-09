@@ -1,6 +1,6 @@
 'use server'
 
-import { FetchResult, GameState, Role, SetupData, State, Status } from "./types";
+import { FetchResult, GameState, Role, SetupData, State, Status, EndResult } from "./types";
 
 const BACKEND_URL_DEV: string | undefined = process.env.BACKEND_DEV;
 const BACKEND_URL_DEPLOY: string | undefined = process.env.BACKEND_DEPLOY;
@@ -80,7 +80,8 @@ export async function get_initial_state(id: string): Promise<FetchResult<GameSta
                 player_name: "Bob",
                 vote: false
             }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     };
     
     return {

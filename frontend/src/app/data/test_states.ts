@@ -1,4 +1,4 @@
-import { GameState, Role, State } from "./types";
+import { GameState, Role, State, EndResult } from "./types";
 
 export const testStates: GameState[] = [
     {
@@ -23,13 +23,14 @@ export const testStates: GameState[] = [
             { player_name: "Bob", vote: false },
             { player_name: "Charlie", vote: true },
             { player_name: "Diana", vote: false }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     },
     {
         human: "Bob",
         players: [
             { name: "Alice", alive: true, role: Role.VILLAGER },
-            { name: "Bob", alive: false, role: Role.MAFIA },
+            { name: "Bob", alive: true, role: Role.MAFIA },
             { name: "Charlie", alive: false, role: Role.DETECTIVE },
             { name: "Diana", alive: true, role: Role.DOCTOR }
         ],
@@ -44,7 +45,8 @@ export const testStates: GameState[] = [
             { player_name: "Bob", vote: false },
             { player_name: "Charlie", vote: true },
             { player_name: "Diana", vote: false }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     },
     {
         human: "Charlie",
@@ -65,7 +67,8 @@ export const testStates: GameState[] = [
             { player_name: "Bob", vote: false },
             { player_name: "Charlie", vote: true },
             { player_name: "Diana", vote: false }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     },
     {
         human: "Alice",
@@ -88,7 +91,8 @@ export const testStates: GameState[] = [
             { player_name: "Alice", vote: true },
             { player_name: "Bob", vote: false },
             { player_name: "Charlie", vote: true }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     },
     {
         human: "Alice",
@@ -108,7 +112,8 @@ export const testStates: GameState[] = [
             { player_name: "Alice", vote: true },
             { player_name: "Charlie", vote: true },
             { player_name: "Diana", vote: false }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     },
     {
         human: "Alice",
@@ -128,6 +133,7 @@ export const testStates: GameState[] = [
             { player_name: "Alice", vote: true },
             { player_name: "Charlie", vote: true },
             { player_name: "Diana", vote: false }
-        ]
+        ],
+        game_over: EndResult.IN_PROGRESS
     }
 ];

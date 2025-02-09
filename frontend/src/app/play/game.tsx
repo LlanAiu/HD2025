@@ -6,9 +6,10 @@ import Night from "../game_states/night";
 import Discussion from "../game_states/discussion";
 import Accusation from "../game_states/accusation";
 import { testStates } from "../data/test_states";
-import { GameState, PlayerData, Role, State } from "../data/types";
+import { EndResult, GameState, PlayerData, Role, State } from "../data/types";
 import Voting from "../game_states/voting";
 import { accusePlayer, castVote, continueTurn, defend, discuss, healPlayer, investigatePlayer, killPlayer, pollState, sleepNight } from "../data/socket_client";
+import { redirect } from "next/navigation";
 
 export default function Game({ game_id, init_state }: { game_id: string, init_state: GameState }) {
     const id = game_id;
@@ -29,6 +30,11 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            if(data.game_over === EndResult.MAFIA_WIN) {
+                redirect(`./${game_id}/win/mafia`);
+            } else if (data.game_over === EndResult.VILLAGER_WIN) {
+                redirect(`./${game_id}/win/villagers`);
+            }
             setState(s => data);
         };
 
@@ -110,7 +116,6 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
             }
             {state.state === State.NIGHT && 
                 <Night 
-                    round={round} 
                     player={human} 
                     players={state.players} 
                     handleSelect={nightAction} 

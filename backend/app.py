@@ -51,7 +51,14 @@ test_data = {
     ],
     "accused": "",
     "accusationNumber": 0,
-    "accuser": ""
+    "accuser": "",
+    "votes": [
+        {"player_name": "player1", "vote": True},
+        {"player_name": "player2", "vote": False},
+        {"player_name": "player3", "vote": True},
+        {"player_name": "player4", "vote": True}
+    ],
+    "game_over": "mafia_win"
 }
 
 @app.websocket("/ws/game/{game_id}")
