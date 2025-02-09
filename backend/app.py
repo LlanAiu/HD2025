@@ -10,7 +10,7 @@ from typing import List
 from game import Game
 from player import Player
 from player_prompts import GPTManager
-from models import NewGameRequest
+from models import Message, NewGameRequest, GetGameRequest, GetGameResponse, PlayerData, Vote
 from environment import Settings
 
 @asynccontextmanager
@@ -24,10 +24,31 @@ app = FastAPI(lifespan=lifespan)
 
 @app.post("/game/new")
 async def new_game(data: NewGameRequest):
+    print(data)
     id = data.game_id
     player_name = data.player_name
     num_players = data.num_players
     app.state.games[id] = Game(player_name, num_players)
+    print(app.state.games[id])
+
+@app.get("/game/{id}")
+async def get_game(id: str) -> GetGameResponse:
+    game = app.state.games.get(id)
+    if game:
+        return GetGameResponse(
+            human=game.human,
+            players=[PlayerData(name=player.name, alive=player.alive, role=player.role) for player in game.players],
+            state=game.state,
+            night_summary=game.night_summary,
+            discussion=[Message(player_name=msg.player_name, message=msg.message) for msg in game.discussion],
+            accused=game.accused,
+            accusationNumber=game.accusationNumber,
+            accuser=game.accuser,
+            votes=[Vote(player_name=vote.player_name, vote=vote.vote) for vote in game.votes],
+            game_over=game.game_over
+        )
+    else:
+        return {"error": "Game not found"}
 
 class ConnectionManager:
     def __init__(self):
