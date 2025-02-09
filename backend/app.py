@@ -89,10 +89,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "investigate":
-                investigate_choice = message["investigate"]
                 game.night_voting()
                 game.night_healing()
-                game.night_investigating(investigate_choice)
+                game.night_investigating()
                 game.discussion()
                 game.get_day_accuser()
             elif message["action_type"] == "kill":
