@@ -24,7 +24,7 @@ export default function Game({ game_id }: { game_id: string }) {
     return (
         <>
             {state.state === "ready" && <Ready player={player} />}
-            {state.state === "night" && <Night round={round} />}
+            {state.state === "night" && <Night round={round} player={player} players={state.players} />}
             {state.state === "discussion" && <Discussion />}
             {state.state === "accusation" && <Accusation />}
 
