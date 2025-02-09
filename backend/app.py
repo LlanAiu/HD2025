@@ -10,19 +10,23 @@ from typing import List
 from game import Game
 from player import Player
 from player_prompts import GPTManager
-
-app = FastAPI()
+from models import NewGameRequest
+from environment import Settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    env: Settings = Settings()
+    app.state.environment = env
     app.state.games = {}
     yield
 
+app = FastAPI(lifespan=lifespan)
+
 @app.post("/game/new")
-async def new_game(data: json):
-    id = data["game_id"]
-    player_name = data["player_name"]
-    num_players = int(data["num_players"])
+async def new_game(data: NewGameRequest):
+    id = data.game_id
+    player_name = data.player_name
+    num_players = data.num_players
     app.state.games[id] = Game(player_name, num_players)
 
 class ConnectionManager:
@@ -53,7 +57,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
     try:
         while True:
             message = await websocket.receive_json()  # General receiver
-            game = app.state.games[message[game_id]]
+            game = app.state.games[message["game_id"]]
             if message["action_type"] == "vote":
                 user_vote = message["voted"]
                 game.day_voting(game.accused, user_vote)
