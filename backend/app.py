@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import json
 
 # external
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from typing import List
 
 # internal
@@ -23,30 +23,20 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 @app.post("/game/new")
-async def new_game(data: NewGameRequest):
+async def new_game(data: NewGameRequest, request: Request):
     print(data)
+    env: Settings = request.app.state.environment
     id = data.game_id
     player_name = data.player_name
     num_players = data.num_players
-    app.state.games[id] = Game(player_name, num_players)
+    app.state.games[id] = Game(player_name, num_players, env.ANTHROPIC_API_KEY)
     print(app.state.games[id])
 
-@app.get("/game/{id}")
+@app.get("/game/{id}", response_model=GetGameResponse)
 async def get_game(id: str) -> GetGameResponse:
-    game = app.state.games.get(id)
+    game: Game = app.state.games.get(id)
     if game:
-        return GetGameResponse(
-            human=game.human,
-            players=[PlayerData(name=player.name, alive=player.alive, role=player.role) for player in game.players],
-            state=game.state,
-            night_summary=game.night_summary,
-            discussion=[Message(player_name=msg.player_name, message=msg.message) for msg in game.discussion],
-            accused=game.accused,
-            accusationNumber=game.accusationNumber,
-            accuser=game.accuser,
-            votes=[Vote(player_name=vote.player_name, vote=vote.vote) for vote in game.votes],
-            game_over=game.game_over
-        )
+        return game.get_web_response()
     else:
         return {"error": "Game not found"}
 

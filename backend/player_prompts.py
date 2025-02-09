@@ -1,5 +1,5 @@
 from enum import Enum
-import anthropic
+from anthropic import Anthropic
 import random
 
 
@@ -22,20 +22,23 @@ class GPTManager:
     playersStartingGame = []
     playerRoles = {}
     mafia = []
-    client = anthropic.Anthropic()
+    client: Anthropic
 
     villagerKnowledge = []
     detectiveKnowledge = []
     mafiaKnowledge = []
     doctorKnowledge = []
 
-    def __init__(self, player_role_dict):
+    def __init__(self, player_role_dict, api_key):
         """
         Argument: Dictionary{string (player's name): enum (player's role)}
         """
         self.playersAlive = list(player_role_dict.keys())
         self.playersStartingGame = list(player_role_dict.keys())
         self.playerRoles = player_role_dict
+        self.client = Anthropic(
+            api_key=api_key
+        )
         for player, role in self.playerRoles.items():
             if role == Roles.MAFIA:
                 self.mafia.append(player)

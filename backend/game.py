@@ -4,18 +4,19 @@ from enum import Enum
 from player_prompts import GPTManager
 import random
 import json
+from models import GetGameResponse, PlayerData, Message, Vote
 
 class State(Enum):
-    READY = "ready",
-    NIGHT = "night",
-    DISCUSSION = "discussion",
-    ACCUSATION = "accusation",
+    READY = "ready"
+    NIGHT = "night"
+    DISCUSSION = "discussion"
+    ACCUSATION = "accusation"
     VOTING = "voting"
 
 
 class EndResult(Enum):
-    MAFIA_WIN = "mafia_win",
-    VILLAGER_WIN = "villager_win",
+    MAFIA_WIN = "mafia_win"
+    VILLAGER_WIN = "villager_win"
     IN_PROGRESS = "in_progress"
 
 
@@ -35,7 +36,7 @@ class Game:
     current_votes = []
 
 
-    def __init__(self, human_name:str, num_players:int):
+    def __init__(self, human_name:str, num_players:int, api_key):
         """
         Args:
         human_name: str
@@ -55,7 +56,7 @@ class Game:
         for (name, player) in self.player_dict.items():
             GPT_dict[name] = player.role
         
-        self.GPTManager = GPTManager(GPT_dict) 
+        self.GPTManager = GPTManager(GPT_dict, api_key=api_key) 
         # for name, player in self.player_dict.items(): #testing
         #     print(f"{name}: {player.role}, Human: {player.is_human}, Alive: {player.alive}") #testing
 
@@ -315,6 +316,20 @@ class Game:
         json_data = json.dumps(data)
         print(json_data)
         return json_data
+    
+    def get_web_response(self) -> GetGameResponse:
+        return GetGameResponse(
+            human=self.human,
+            players=[PlayerData(name=player.name, alive=player.alive, role=player.role.value) for player in self.player_dict.values()],
+            state=self.current_state.value,
+            night_summary=[self.current_night_summary],
+            discussion=[Message(player_name=msg["player_name"], message=msg["message"]) for msg in self.current_discussion],
+            accused=self.accused,
+            accusationNumber=self.accusations,
+            accuser=self.accuser,
+            votes=[Vote(player_name=vote["player_name"], vote=vote["Vote"]) for vote in self.current_votes],
+            game_over=self.determine_game_result().value
+        )
 
 if __name__ == "__main__":
     game = Game("human", 7)
