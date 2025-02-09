@@ -23,7 +23,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
     const human: PlayerData = state.players.find(player => player.name === humanName) || {
         name: "Test",
         alive: true,
-        role: Role.TOWNSPERSON
+        role: Role.VILLAGER
     };
 
     useEffect(() => {
@@ -31,8 +31,7 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            setMessages((prev) => [...prev, data.message]);
-            console.log(messages);
+            setState(s => data);
         };
 
         setSocket(ws);
@@ -110,15 +109,15 @@ export default function Game({ game_id, init_state }: { game_id: string, init_st
                 <Accusation 
                     humanPlayer={human}
                     players={state.players}
-                    humanAccused={state.accusation === humanName}
-                    humanAccusing={state.accusing === humanName}
+                    humanAccused={state.accused === humanName}
+                    humanAccusing={state.accuser === humanName}
                     onAccuse={accuse}
                     sendDefenceMessage={sendDefenseMessage}
                 />
             }
             {state.state === State.VOTING && 
                 <Voting 
-                    accused={state.accusation} 
+                    accused={state.accused} 
                     onVote={vote} 
                 />
             }

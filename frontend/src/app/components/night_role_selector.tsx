@@ -12,7 +12,7 @@ const prompts = {
     [Role.MAFIA] : "Select a player to eliminate.",
     [Role.DETECTIVE]: "Select a player to investigate.",
     [Role.DOCTOR]: "Select a player to heal.",
-    [Role.TOWNSPERSON]: "Literally Nothing"
+    [Role.VILLAGER]: "Literally Nothing"
 };
 
 export default function NightRoleSelector({ player, players, onSelect }: NightRoleSelectorProps) {

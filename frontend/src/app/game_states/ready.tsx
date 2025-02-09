@@ -15,7 +15,7 @@ export default function Ready({ player, onStart } : ReadyProps) {
         "mafia": "You are part of the Mafia. Your goal is to eliminate all the other players.",
         "detective": "You are the Detective. Your goal is to find out who the Mafia members are.",
         "doctor": "You are the Doctor. Your goal is to save players from being eliminated.",
-        "townsperson": "You are a Townsperson. Your goal is to survive and find out who the Mafia members are."
+        "villager": "You are a Townsperson. Your goal is to survive and find out who the Mafia members are."
     };
 
     const roleDescription = roleDescriptions[player.role.valueOf()] || "No description available for this role.";

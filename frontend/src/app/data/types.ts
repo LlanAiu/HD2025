@@ -21,11 +21,11 @@ export type GameState = {
     human: string
     players: PlayerData[],
     state: State,
-    events: string[],
+    night_summary: string[],
     discussion: Message[],
-    accusation: string,
+    accused: string,
     accusationNumber: number,
-    accusing: string
+    accuser: string
 }
 
 export type PlayerData = {
@@ -40,7 +40,7 @@ export type Message = {
 }
 
 export enum Role {
-    TOWNSPERSON = "townsperson",
+    VILLAGER = "villager",
     MAFIA = "mafia",
     DETECTIVE = "detective",
     DOCTOR = "doctor"

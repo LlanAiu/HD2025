@@ -8,7 +8,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.games = {"lol" : "what"}
+    app.state.games = {}
     yield
 
 app: FastAPI = FastAPI(lifespan=lifespan)
@@ -35,18 +35,33 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+test_data = {
+    "human": "player1",
+    "players": [
+        {"name": "player1", "alive": True, "role": "villager"},
+        {"name": "player2", "alive": True, "role": "mafia"},
+        {"name": "player3", "alive": True, "role": "detective"},
+        {"name": "player4", "alive": True, "role": "doctor"}
+    ],
+    "state": "discussion",
+    "night_summary": ["Literally nothing happened last night"],
+    "discussion": [
+        {"player_name": "player1", "message": "Let's find the mafia!"},
+        {"player_name": "player2", "message": "I'm not the mafia!"}
+    ],
+    "accused": "",
+    "accusationNumber": 0,
+    "accuser": ""
+}
+
 @app.websocket("/ws/game/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
     await manager.connect(game_id, websocket)
     try:
         while True:
             data = await websocket.receive_json()
-            print(app.state.games["lol"])
             print("Received:", data)
-            await manager.broadcast(game_id, {
-                "recieved_data" : data,
-                "message" : "Got data back" 
-            })
+            await manager.broadcast(game_id, test_data)
     except WebSocketDisconnect:
         manager.disconnect(game_id, websocket)
 

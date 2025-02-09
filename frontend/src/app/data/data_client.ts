@@ -59,18 +59,18 @@ export async function get_initial_state(id: string): Promise<FetchResult<GameSta
     const sampleData: GameState = {
         human: "Alice",
         players: [
-            { name: "Alice", alive: true, role: Role.TOWNSPERSON },
+            { name: "Alice", alive: true, role: Role.VILLAGER },
             { name: "Bob", alive: true, role: Role.MAFIA }
         ],
         state: State.NIGHT,
-        events: ["Day 1 started", "Alice voted for Bob"],
+        night_summary: ["Day 1 started", "Alice voted for Bob"],
         discussion: [
             { player_name: "Alice", message: "I think Bob is suspicious." },
             { player_name: "Bob", message: "I'm not the mafia!" }
         ],
-        accusation: "Bob",
+        accused: "Bob",
         accusationNumber: 1,
-        accusing: "Alice"
+        accuser: "Alice"
     };
     
     return {
