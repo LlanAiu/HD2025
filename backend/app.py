@@ -7,11 +7,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from typing import List
 
 # internal
-from game import Game
+from game import Game, State
 from player import Player
 from player_prompts import GPTManager, Roles
 from models import Message, NewGameRequest, GetGameRequest, GetGameResponse, PlayerData, Vote
 from environment import Settings
+import asyncio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -62,6 +63,18 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+@app.websocket("/ws/player/{game_id}")
+async def websocket_endpoint(websocket: WebSocket, game_id: str):
+    await manager.connect(game_id, websocket)
+    try:
+        while True:
+            message = await websocket.receive_json()  # General receiver
+            game = app.state.games[message["game_id"]]
+            user_message = message["discussed"]
+            game.listen_for_user(user_message)
+    except WebSocketDisconnect:
+        manager.disconnect(game_id, websocket)
+
 @app.websocket("/ws/game/{game_id}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str):
     await manager.connect(game_id, websocket)
@@ -77,9 +90,10 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.get_defense(user_defense)
             elif message["action_type"] == "accuse":
                 accuse_choice = message["accused"]
-                game.day_accusations(game.is_human_accuser,accuse_choice)
+                game.get_day_accusation(accuse_choice)
+                game.get_defense()
             elif message["action_type"] == "discuss":
-                user_message = message["discuss"]
+                user_message = message["discussed"]
                 game.listen_for_user(user_message)
             elif message["action_type"] == "heal":
                 heal_choice = message["healed"]
@@ -87,30 +101,51 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.night_healing(heal_choice)
                 game.night_investigating()
                 await manager.broadcast(game_id, game.get_gamestate_json())
-                game.discussion()
+                await asyncio.sleep(0)
+                await game.discussion(game_id, manager)
                 game.get_day_accuser()
+                if not game.is_human_accuser:
+                    game.get_day_accusation(game.is_human_accuser)
+                    game.get_defense()
+            elif message["action_type"] == "next":
+                if game.current_state == State.VOTING:
+                    game.current_state = State.NIGHT
+                if game.current_state == State.ACCUSATION:
+                    game.current_state = State.VOTING
             elif message["action_type"] == "investigate":
                 game.night_voting()
                 game.night_healing()
                 game.night_investigating()
                 await manager.broadcast(game_id, game.get_gamestate_json())
-                game.discussion()
+                await asyncio.sleep(0)
+                await game.discussion(game_id, manager)
                 game.get_day_accuser()
+                if not game.is_human_accuser:
+                    game.get_day_accusation(game.is_human_accuser)
+                    game.get_defense()
             elif message["action_type"] == "kill":
                 kill_choice = message["kill"]
                 game.night_voting(kill_choice)
                 game.night_healing()
                 game.night_investigating()
                 await manager.broadcast(game_id, game.get_gamestate_json())
-                game.discussion()
+                await asyncio.sleep(0)
+                await game.discussion(game_id, manager)
                 game.get_day_accuser()
+                if not game.is_human_accuser:
+                    game.get_day_accusation(game.is_human_accuser)
+                    game.get_defense()
             elif message["action_type"] == "sleep":
                 game.night_voting()
                 game.night_healing()
                 game.night_investigating()
                 await manager.broadcast(game_id, game.get_gamestate_json())
-                game.discussion()
+                await asyncio.sleep(0)
+                await game.discussion(game_id, manager)
                 game.get_day_accuser()
+                if not game.is_human_accuser:
+                    game.get_day_accusation(game.is_human_accuser)
+                    game.get_defense()
             elif message["action_type"] == "continue":
                 match message["next_state"]:
                     case "night":
@@ -118,13 +153,13 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                         game.night_healing()
                         game.night_investigating()
                     case "discussion":
-                        game.discussion()
+                        await game.discussion(game_id, manager)
                         game.get_day_accuser()
                     case "accusation":
                         game.get_day_accusation()
                         game.get_defense()
                     case "voting":
-                        game.day_voting()
+                        game.day_voting(game.accused)
 
             elif message["action_type"] == "poll":
                 pass

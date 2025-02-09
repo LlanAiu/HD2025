@@ -51,7 +51,7 @@ class GPTManager:
             prompt = [  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is citizen. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Give your player a quirky and unique personality! Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Respond conversationally in short sentences, like a human player would. Give your player a slightly quirky and unique personality! Write only 1-3 sentences per response, unless specified otherwise. ",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -62,7 +62,7 @@ class GPTManager:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is mafia. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen. The mafia  are: {", ".join(player for player in self.mafia)}",
                 f"Your goal is to kill all the townsfolk before the players vote you out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}.\n",
-                f"Respond conversationally in short sentences, like a human player would. Give your player a quirky and unique personality! Write only 1-3 sentences per response, unless specified otherwise.\n\n",
+                f"Respond conversationally in short sentences, like a human player would. Give your player a slightly quirky and unique personality! Write only 1-3 sentences per response, unless specified otherwise.\n\n",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -73,7 +73,7 @@ class GPTManager:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is detective. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. When you investigate a player, you will learn if they are the mafia. If you find mafia, you should try to accuse them and convince others to vote them out. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Give your player a quirky and unique personality! Be careful about revealing you are the detective, or the mafia might kill you. Sometimes, though it is the best move to reveal yourself and accuse the mafia. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Respond conversationally in short sentences, like a human player would. Give your player a slightly quirky and unique personality! Be careful about revealing you are the detective, or the mafia might kill you. Sometimes, though it is the best move to reveal yourself and accuse the mafia. Write only 1-3 sentences per response, unless specified otherwise. ",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -84,7 +84,7 @@ class GPTManager:
             prompt = (  
                 f"You are {playerName}, a player in a game of Mafia. Your name is {playerName}, and your role is doctor. There are {len(self.mafia)} mafia, 1 detective, and 1 doctor in the game. Everyone else is a citizen.",
                 f"Your goal is to find the mafia and vote them out before you die. Every night you will be able to heal a player, including yourself, and hopefully prevent them from being killed by the mafia. The players who started the game are: {", ".join(player for player in self.playersStartingGame)}. ",
-                f"Respond conversationally in short sentences, like a human player would. Give your player a quirky and unique personality! Try not to let the mafia know you are the doctor, or they might kill you. Write only 1-3 sentences per response, unless specified otherwise. ",
+                f"Respond conversationally in short sentences, like a human player would. Give your player a slightly quirky and unique personality! Try not to let the mafia know you are the doctor, or they might kill you. Write only 1-3 sentences per response, unless specified otherwise. ",
                 f"Here are a few examples of how to respond:",
                 f"<example 1>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: I think it has to be {random.choice(self.playersStartingGame)}, who else would kill {random.choice(self.playersStartingGame)}? I think they were looking at me funny, it makes me a little scared.",
                 f"<example 2>\nNarrator: Please contribute 1-2 sentences to the discussion.\n{playerName}: Guys, it's not me! I swear I didn't kill them!!!",
@@ -122,7 +122,7 @@ class GPTManager:
 
         self.summarize()
 
-        self.playersAlive = players_alive
+        self.playersAlive = list(players_alive)
         self.mafiaAlive = []
         self.townsfolkAlive = []
         for player in players_alive:
@@ -423,6 +423,9 @@ class GPTManager:
             if (player in lowerCaseResponse):
                 playerToAccuse = player
 
+        if playerToAccuse == None:
+            playerToAccuse = random.choice(self.playersAlive)
+            
         return (playerToAccuse, response)
 
     def defence_from_accusation(self, player_being_asked):

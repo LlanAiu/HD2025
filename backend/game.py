@@ -4,6 +4,7 @@ from player_prompts import GPTManager, Roles
 import random
 import json
 from models import GetGameResponse, PlayerData, Message, Vote
+import asyncio
 
 class State(Enum):
     READY = "ready"
@@ -112,7 +113,7 @@ class Game:
         Returns: void.
         """
         self.player_dict[name].alive = False
-        del self.alive_list[self.alive_list.index(name)]
+        self.alive_list.remove(name)
 
     def get_day_accuser(self):
         self.accuser = random.choice(self.alive_list)
@@ -122,17 +123,22 @@ class Game:
             self.is_human_accuser = False
         return self.accuser
         
-    def get_day_accusation(self, who_player_accusing):
+    def get_day_accusation(self, who_player_accusing: str = ""):
+        self.current_discussion = []
+        self.current_night_summary = []
         self.accusations+=1
         if self.is_human_accuser and who_player_accusing != "":
             self.accused = who_player_accusing
+            print("it went here")
         else:
             self.accused = self.GPTManager.who_would_you_like_to_accuse(self.accuser)[0] 
+            print("it went there")
+        print("Day Accusation Got: " + self.accused)
         self.GPTManager.update_memory("Narrator", f"{self.accuser} is accusing {self.accused}.", self.alive_list) #test tuple functionality (can i do [0])
-        #testing
+        self.current_discussion.append({"player_name":"Narrator", "message":f"{self.accuser} is accusing {self.accused}."})
         return self.accused
 
-    def get_defense(self, player_defense):
+    def get_defense(self, player_defense:str=""):
         if self.accused == self.human and player_defense != "":
             self.GPTManager.update_memory(self.accused, player_defense, self.alive_list)
             self.current_discussion.append({"player_name":self.accused, "message":player_defense})
@@ -169,10 +175,12 @@ class Game:
         if votes > 0:
             self.kill(accused)
             sentence = f"The villagers voted {accused} to die."
+            self.current_night_summary = sentence
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
             return True
         else:
             sentence = f"The villagers failed to reach a consensus. No one has died."
+            self.current_night_summary = sentence
             self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
             return False #if return false, run accusations again, 3 total times max. if still not passed, no one dies
     
@@ -201,7 +209,7 @@ class Game:
         self.person_killed = person_killed
         return person_killed
 
-    def night_investigating(self): #WORKS without GPTManager
+    def night_investigating(self):
         """
         Arguments: None. 
         The detective is passed to GPTManager.
@@ -219,8 +227,10 @@ class Game:
                     detective = player
                     break
             if detective == None:
+                self.current_state = State.DISCUSSION
                 return
             self.GPTManager.who_to_investigate(detective)
+        self.current_state = State.DISCUSSION
         #TODO: maybe make narrator say "the detective is investigating someone"
 
     def night_healing(self, user_choice:str=""):
@@ -260,16 +270,22 @@ class Game:
             # print(person_killed) #testing
             self.kill(person_killed)
     
-    def discussion(self): #don't know how to test the response stuff without the GPTManager
+    async def discussion(self, game_id, manager):
         """
         Discussion method: uses random-weighted choice based off player dialogue to API call.
         """
         self.current_state = State.DISCUSSION
         self.current_discussion = []
-        discussion_limit = random.randint(5,15)
-        speaking_probabilities = dict.fromkeys(self.alive_list, 1/len(self.alive_list)) # Equal probability of speaking.
+        discussion_limit = random.randint(2, 3)
+        discussion_list = []
+        for player in self.alive_list:#make a copy of alive list without the human to pass to AI
+            if player != self.human:
+                discussion_list.append(player)
+        speaking_probabilities = dict.fromkeys(discussion_list, 1/len(discussion_list)) # Equal probability of speaking.
+        print(discussion_list)
+        print(speaking_probabilities)
         for _ in range(discussion_limit):
-            talking = random.choices(self.alive_list, weights=list(speaking_probabilities.values()))[0]
+            talking = random.choices(discussion_list, weights=list(speaking_probabilities.values()))[0]
             response = self.GPTManager.contribute_to_general_discussion(talking)
             self.current_discussion.append({"player_name":talking, "message":response})
             self.GPTManager.update_memory(talking, response, self.alive_list)
@@ -277,6 +293,9 @@ class Game:
                 if j in response: # Increase their responsiveness by 10% (0.1), and decrease everyone else's proportion by 0.1/(n-1)
                     for k in list(speaking_probabilities.keys()):
                         speaking_probabilities[k] += 0.1 if j == k else -0.1/(len(self.alive_list)-1)
+            await manager.broadcast(game_id, self.get_gamestate_json())
+            await asyncio.sleep(2)
+        await asyncio.sleep(4)
         self.current_state = State.ACCUSATION
 
     def listen_for_user(self, user_message):
@@ -320,9 +339,9 @@ class Game:
         data['accuser'] = self.accuser
         data['votes'] = self.current_votes
         data['game_result'] = self.determine_game_result().value
-        json_data = json.dumps(data)
-        print(json_data)
-        return json_data
+        # json_data = json.dumps(data)
+        # print(self.current_discussion)
+        return data
     
     def get_web_response(self) -> GetGameResponse:
         return GetGameResponse(
