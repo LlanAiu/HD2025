@@ -125,7 +125,7 @@ class Game:
         
     def get_day_accusation(self, who_player_accusing: str = ""):
         self.current_discussion = []
-        self.current_night_summary = []
+        self.current_night_summary = ""
         self.accusations+=1
         if self.is_human_accuser and who_player_accusing != "":
             self.accused = who_player_accusing
@@ -276,7 +276,7 @@ class Game:
         """
         self.current_state = State.DISCUSSION
         self.current_discussion = []
-        discussion_limit = random.randint(2, 3)
+        discussion_limit = random.randint(2, 5)
         discussion_list = []
         for player in self.alive_list:#make a copy of alive list without the human to pass to AI
             if player != self.human:
