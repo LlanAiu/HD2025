@@ -13,6 +13,12 @@ class State(Enum):
     VOTING = "voting"
 
 
+class EndResult(Enum):
+    MAFIA_WIN = "mafia_win",
+    VILLAGER_WIN = "villager_win",
+    IN_PROGRESS = "in_progress"
+
+
 class Game:
     human = ""
     player_dict = {}
@@ -50,8 +56,8 @@ class Game:
             GPT_dict[name] = player.role
         
         self.GPTManager = GPTManager(GPT_dict) 
-        for name, player in self.player_dict.items():
-            print(f"{name}: {player.role}, Human: {player.is_human}, Alive: {player.alive}, {player.temperature}")
+        # for name, player in self.player_dict.items(): #testing
+        #     print(f"{name}: {player.role}, Human: {player.is_human}, Alive: {player.alive}") #testing
 
         self.current_state = State.READY
         
@@ -94,8 +100,8 @@ class Game:
                                  'Tyrese', 'Amira', 'Avrick', 'Srinath', 'Alan', 'Georgiy']
         if (self.human in all_names):
             all_names.remove(self.human)
-        return random.sample(all_names, num_non_human_players) #temporarily commented out for testing
-        #return all_names[:num_non_human_players] #temp hardcode fore testing
+        return random.sample(all_names, num_non_human_players) 
+        #return all_names[:num_non_human_players] #temp hardcode for testing
 
 
     def kill(self, name): #WORKS
@@ -113,6 +119,7 @@ class Game:
             self.is_human_accuser = True
         else:
             self.is_human_accuser = False
+        return self.accuser
         
     def get_day_accusation(self, who_player_accusing):
         self.accusations+=1
@@ -121,6 +128,7 @@ class Game:
         else:
             self.accused = self.GPTManager.who_would_you_like_to_accuse(self.accuser)[0] 
         self.GPTManager.update_memory("Narrator", f"{self.accuser} is accusing {self.accused}.", self.alive_list) #test tuple functionality (can i do [0])
+        #testing
         return self.accused
 
     def get_defense(self, player_defense):
@@ -132,7 +140,7 @@ class Game:
             self.current_discussion.append({"player_name":self.accused, "message":response})
             self.GPTManager.update_memory(self.accused, response, self.alive_list)
 
-    def day_voting(self, accused, user_vote):
+    def day_voting(self, accused, user_vote:str=""):
         """
         Arguments: string, string; name of player accused, the user's vote that's either "True" or "False".
         Sums accusation votes from all alive players. +1 if for, -1 if against.
@@ -179,21 +187,21 @@ class Game:
         """
         self.current_state = State.NIGHT
         person_killed = ""
-        if (user_choice != ""):
+    
+        if (user_choice != "" and user_choice != None):
             person_killed = user_choice
             #TODO: maybe ask mafia what they think
         elif self.player_dict[self.human].role != Roles.MAFIA:
             for player in self.alive_list:
                 if self.player_dict[player].role == Roles.MAFIA:
                     person_killed = self.GPTManager.who_to_kill(player) 
-                    #person_killed = "Aaliyah" testing
+                    #person_killed = "Naomi" #testing
                     break
         return person_killed
 
-    def night_investigating(self, user_choice): #WORKS without GPTManager
+    def night_investigating(self): #WORKS without GPTManager
         """
-        Arguments: string; name of player that the player would like to investigate 
-        if they are the detective (this condition is handled externally).
+        Arguments: None. 
         The detective is passed to GPTManager.
         Returns: void.
         """
@@ -210,7 +218,7 @@ class Game:
             self.GPTManager.who_to_investigate(detective)
         #TODO: maybe make narrator say "the detective is investigating someone"
 
-    def night_healing(self, person_killed, user_choice):
+    def night_healing(self, person_killed, user_choice:str=""):
         """
         Arguments: string, string; name of player killed by mafia, name of player to be saved by human 
         if they are the doctor (this condition is handled externally).
@@ -218,29 +226,33 @@ class Game:
         The doctor is passed to GPTManager.
         Returns: void.
         """
+        # print(f"Saved {person_saved}")
+        print(f"Killed {person_killed}")
         if self.player_dict[self.human].role == Roles.DOCTOR:
             person_saved = user_choice
-        else:
+        else: 
             doctor = None
             for player in self.alive_list:
                 if self.player_dict[player].role == Roles.DOCTOR:
                     doctor = player
                     break
             person_saved = self.GPTManager.who_to_save(doctor)
-            # person_saved = "Naomi" # for testing
+            #person_saved = "Aaliyah" # for testing
             
         if person_killed == person_saved:
             sentence = f"The mafia attempted to kill {person_killed}, but the doctor saved them."
-            self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
+            self.GPTManager.update_memory("Narrator", sentence, self.alive_list) #testing
             self.current_night_summary = sentence
+            #print(sentence) #testing
         else:
             sentence = f"{person_killed} was killed by the mafia."
-            self.GPTManager.update_memory("Narrator", sentence, self.alive_list)
+            self.GPTManager.update_memory("Narrator", sentence, self.alive_list) #testing
             self.current_night_summary = sentence
-            # print(person_killed)
+            # print(sentence) #testing
+            # print(person_killed) #testing
             self.kill(person_killed)
     
-    def discussion(self):
+    def discussion(self): #don't know how to test the response stuff without the GPTManager
         """
         Discussion method: uses random-weighted choice based off player dialogue to API call.
         """
@@ -267,8 +279,13 @@ class Game:
         self.current_discussion.append({"player_name":self.human, "message":user_message})
         self.GPTManager.update_memory(self.human,user_message, self.alive_list)
         
-    def determine_game_over(self):
-        return 2*self.count_type(Roles.MAFIA) >= len(self.alive_list) # Crazy inequality math, figure it out lol.
+    def determine_game_result(self):
+        if 2*self.count_type(Roles.MAFIA) >= len(self.alive_list): # Crazy inequality math, figure it out lol.
+            return EndResult.MAFIA_WIN
+        if self.count_type(Roles.MAFIA) == 0:
+            return EndResult.VILLAGER_WIN
+        return EndResult.IN_PROGRESS
+        
     
     def count_type(self, search:Roles):
         count = 0
@@ -294,36 +311,23 @@ class Game:
         data['accusationNumber'] = self.accusations
         data['accuser'] = self.accuser
         data['votes'] = self.current_votes
+        data['game_result'] = self.determine_game_result()
         json_data = json.dumps(data)
         print(json_data)
         return json_data
 
-    """
-    def run_game(self):
-        #Main Game loop: Calls all event functions.
-        while not self.determine_game_over():
-            person_killed = self.night_voting()
-            self.night_investigating()
-            self.night_healing(person_killed)
-            self.discussion()
-            accused = self.day_accusations()
-            
-            i=0
-            while i < 3:
-                if self.day_voting(accused):
-                    break
-
-                accused = self.day_accusations()
-                i+=1
-    """
-
 if __name__ == "__main__":
     game = Game("human", 7)
-    person_killed = game.night_voting()
-    #game.night_investigating("Aaliyah")
-    game.night_healing(person_killed, "")
-    game.discussion()
-    #accused = game.day_accusations()
+    person_killed = game.night_voting() #Killing Naomi
+    #game.night_investigating() #doesn't do anything tbh, nothing to test
+    #game.night_healing(person_killed) #Saving Aaliyah, or Naomi works
+    # accuser = game.get_day_accuser()
+    # print(accuser)
+    # print(accuser)
+    accused = game.get_day_accusation("Aaliyah")
+    print(accused)
+    
+    #test defense
     """
     i=0
     while i < 3:

@@ -18,6 +18,12 @@ async def lifespan(app: FastAPI):
     app.state.games = {}
     yield
 
+@app.post("/game/new")
+async def new_game(data: json):
+    id = data["game_id"]
+    player_name = data["player_name"]
+    num_players = int(data["num_players"])
+    app.state.games[id] = Game(player_name, num_players)
 
 class ConnectionManager:
     def __init__(self):
@@ -62,33 +68,51 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 game.listen_for_user(user_message)
             elif message["action_type"] == "heal":
                 heal_choice = message["healed"]
-                game.night_voting("")
+                game.night_voting()
                 game.night_healing(heal_choice)
-                game.night_investigating("")
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
             elif message["action_type"] == "investigate":
                 investigate_choice = message["investigate"]
-                game.night_voting("")
-                game.night_healing("")
+                game.night_voting()
+                game.night_healing()
                 game.night_investigating(investigate_choice)
+                game.discussion()
+                game.get_day_accuser()
             elif message["action_type"] == "kill":
                 kill_choice = message["kill"]
                 game.night_voting(kill_choice)
-                game.night_healing("")
-                game.night_investigating("")
+                game.night_healing()
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
             elif message["action_type"] == "sleep":
-                game.night_voting("")
-                game.night_healing("")
-                game.night_investigating("")
+                game.night_voting()
+                game.night_healing()
+                game.night_investigating()
+                game.discussion()
+                game.get_day_accuser()
+            elif message["action_type"] == "continue":
+                match message["next_state"]:
+                    case "night":
+                        game.night_voting()
+                        game.night_healing()
+                        game.night_investigating()
+                    case "discussion":
+                        game.discussion()
+                        game.get_day_accuser()
+                    case "accusation":
+                        game.get_day_accusation()
+                        game.get_defense()
+                    case "voting":
+                        game.day_voting()
+
+            elif message["action_type"] == "poll":
+                pass
+
         
             await manager.broadcast(game_id, game.get_gamestate_json())
 
     except WebSocketDisconnect:
         manager.disconnect(game_id, websocket)
-
-
-@app.post("/game/new")
-async def new_game(data: json):
-    id = data["game_id"]
-    player_name = data["player_name"]
-    num_players = int(data["num_players"])
-    app.state.games[id] = Game(player_name, num_players)
